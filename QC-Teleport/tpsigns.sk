@@ -1,3 +1,10 @@
+#Todo:
+#- Add a limiter (Links to supporters benefits)
+#- Create a logger for when the TPSign's are created or removed
+#- Make a /tpsign mystats (Shows number of TPSign's that can be made and how many have been made)
+#- Check the location of TP for ANYTHING to prevent traps
+#- Add support for nether portals? Not sure how it would work
+
 options:
 	Sign: off
 	Walk: on
