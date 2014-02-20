@@ -1,0 +1,153 @@
+options:
+	Sign: off
+	Walk: on
+	Stats: on
+	Enabled: on
+	Sign Radius: 3
+
+on Skript start:
+	broadcast "&3[&bTPSign&3] &bThis server is running &6TPSign - &bversion: &61.0.0"
+	broadcast "&3[&bTPSign&3] &bTPSign is by &6nfell2009"
+
+on Skript stop:
+	broadcast "&4[Stopping] &3[&bTPSign&3] &bThis server is running &6TPSign - &bversion: &61.0.0"
+	broadcast "&3[&bTPSign&3] &bTPSign is by &6nfell2009"
+
+on join: 
+	message "&3[&bTPSign&3] &bThis server is running &6TPSign &b- version: &61.0.0"
+	message "&3[&bTPSign&3] &bTPSign is by &6nfell2009"
+
+command /tpsign [<text>]:
+	executable by: players
+	trigger:
+		if {Enabled} is on:
+			if argument 1 is "set":
+				set {tps.%player%} to location of player
+				set x coordinate of {tps.%player%} to round down x coordinate of {tps.%player%}
+				set y coordinate of {tps.%player%} to round down y coordinate of {tps.%player%}
+				set z coordinate of {tps.%player%} to round down z coordinate of {tps.%player%}
+				message "&3[&bTPSign&3] &bSet a TPSign at:"
+				message "&3[&bTPSign&3] &bX = %x coordinate of {tps.%player%}%"
+				message "&3[&bTPSign&3] &bY = %y coordinate of {tps.%player%}%"
+				message "&3[&bTPSign&3] &bZ = %z coordinate of {tps.%player%}%"
+			else if argument 1 is "help":
+				message "&b----------------------- &6TPSign &b------------------------"
+				message "&3- &b/tpsign help &3- &bThis menu"
+				message "&3- &b/tpsign set &3- &bSets a TPSign"
+				message "&3- &b/tpsign stats &3- &bShows TPSign stats"
+				message ""
+				message "&3- &bNote! All coordanitates are rounded down!"
+				message "&3- &bSo 11.32 -> 11 OR 11.74 -> 11"
+				message "&3- &6TPSign &bby nfell2009!"
+				message "&b----------------------- &6Help  &b-------------------------"
+			else:
+				message "&3[&bTPSign&3] &bUnknown command! Do &6/tpsign help&b - for commands"
+		else if {Enabled} is off: 
+			message "&3[&bTPSign&3] &bTPSigns is currently disabled! Do &6/tpsadmin tpsign on &b- to turn TPSign on!"
+		else:
+			message "&3[&bTPSign&3] &bUnknown command! Do &6/tpsign help&b - for commands"
+
+command /tpsadmin [<text>] [<text>]:
+	executable by: console, players
+	trigger:
+		if argument 1 is "help":
+			message "&b----------------------- &6TPSign &b------------------------"
+			message "&3- &b/tpsadmin help &3- &bThis menu"
+			message "&3- &b/tpsadmin [sign|walk] [on|off] &3- &bChanges usage"
+			message "&3- &b/tpsadmin tpsign [on|off|reload] &3- &bExplanitory"
+			message "&3- &b/tpsadmin admin stats &3- &bShows stats of TPSigns"
+			message "&3- &b/tpsadmin stats [on|off] &3- &bCan players do /tpsign stats?"
+			message "&3- &b/tpsadmin enabled [on|off] &3- &bTurn TPSigns on/off"
+			message "&3- &b/tpsadmin signradius <number> &3- &bChanges sign click area"
+			message ""
+			message "&3- &bNote! All coordanitates are rounded down!"
+			message "&3- &bSo 11.32 -> 11 OR 11.74 -> 11"
+			message "&3- &6TPSign &bby nfell2009!"
+			message "&b----------------------- &6Help  &b-------------------------"
+		else if argument 1 is "sign":
+			if argument 2 is "on":
+				set {Sign} to on
+				message "&3[&bTPSign&3] &aEnabled &6Sign Clicking&b!"
+			else if argument 2 is "on":
+				set {Sign} to on
+				message "&3[&bTPSign&3] &cDisabled &6Sign Clicking&b!"
+			else:
+				message "&3[&bTPSign&3] &bUnkown setting! Only &6true&b/&6false &bare allowed!"
+		else if argument 1 is "walk":
+			if argument 2 is "on":
+				set {Walk} to on
+				message "&3[&bTPSign&3] &aEnabled &6Pressure Plates&b!"
+			else if argument 2 is "off":
+				set {Sign} to off
+				message "&3[&bTPSign&3] &cDisabled &6Pressure Plates&b!"
+			else:
+				message "&3[&bTPSign&3] &bUnkown setting! Only &6true&b/&6false &bare allowed!"
+		else if argument 1 is "reload":
+			if player has permission "tpsign.admin":
+				message "&3[&bTPSign&3] &bReloading &6TPSign&b..."
+				execute op command "/skript reload tpsign"
+				message "&3[&bTPSign&3] &bReloaded &6TPSign&b!"
+				message "&3[&bTPSign&3] &bThis server is running &6TPSign &b- version: &61.0.0"
+				message "&3[&bTPSign&3] &bTPSign is by &6nfell2009"
+		else if argument 1 is "enabled":
+			if argument 2 is "on":
+				set {Enabled} to on
+				message "&3[&bTPSign&3] &aEnabled &6TPSigns&b!"
+				message "&3[&bTPSign&3] &6/tpsadmin &3- &bIS NOT affected by this."
+			else if argument 2 is "off":
+				set {Enabled} to off
+				message "&3[&bTPSign&3] &cDisabled &6TPSigns&b!"
+				message "&3[&bTPSign&3] &6/tpsadmin &3- &bIS NOT affected by this."
+		else:
+			message "&3[&bTPSign&3] &bUnknown command! Do &6/tpsadmin help &b- for commands"
+
+				
+
+on sign change:
+	if {Enabled} is on:
+		{tps.%player%} is set:
+			if line 1 of block is "tpsign":
+				set line 1 of block to "[TPSIGN]"
+				set line 2 of block to "%x coordinate of {tps.%player%}%"
+				set line 3 of block to "%y coordinate of {tps.%player%}%"
+				set line 4 of block to "%z coordinate of {tps.%player%}%"
+	else if {Enabled} is off:
+		message "&3[&bTPSign&3] &bTPSigns is currently disabled! Do &6/tpsadmin tpsign on &b- to turn TPSign on!"
+	else:
+		message "&3[&bTPSign&3] &bTPSign's had an error somewhere...! Please report it to a staff member"
+
+on stepping on a pressure plate:
+	if {Enabled} is on:
+		if {Walk} is true:
+			loop blocks in radius 2 of event-player:
+				loop-block is sign:
+					line 1 of loop-block is "[TPSIGN]":
+						set {_x.c} to "%line 2 of loop-block%" parsed as number
+						set {_y.c} to "%line 3 of loop-block%" parsed as number
+						set {_z.c} to "%line 4 of loop-block%" parsed as number
+						execute console command "/tp %event-player% %{_x.c}% %{_y.c}% %{_z.c}%"
+						stop
+		else:
+			message "&3[&bTPSign&3] &bSorry! But pressure plates aren't enabled!"
+	else if {Enabled} is off:
+		message "&3[&bTPSign&3] &bTPSigns is currently disabled! Do &6/tpsadmin tpsign on &b- to turn TPSign on!"
+	else:
+		message "&3[&bTPSign&3] &bTPSign's had an error somewhere...! Please report it to a staff member"
+
+on rightclick on a sign:
+	if {Enabled} is on:
+		if {Sign} is true:
+			loop blocks in radius {Sign Radius} of event-player:
+				loop-block is sign:
+					line 1 of loop-block is "[TPSIGN]":
+						set {_x.c} to "%line 2 of loop-block%" parsed as number
+						set {_y.c} to "%line 3 of loop-block%" parsed as number
+						set {_z.c} to "%line 4 of loop-block%" parsed as number
+						execute console command "/tp %event-player% %{_x.c}% %{_y.c}% %{_z.c}%"
+						stop
+		else:
+			message "&3[&bTPSign&3] &bSorry! But signs clicking isn't enabled!"
+	else if {Enabled} is off:
+		message "&3[&bTPSign&3] &bTPSigns is currently disabled! Do &6/tpsadmin tpsign on &b- to turn TPSign on!"
+	else:
+		message "&3[&bTPSign&3] &bTPSign's had an error somewhere...! Please report it to a staff member"
