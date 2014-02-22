@@ -1,0 +1,59 @@
+#SharedVault a QuartzCraft Script
+#SharedVault is a script that allows players to share their enderchests
+
+#Todo:
+#- Add a limiter (Links to supporter benefits)
+#- Make it check for an enderchest nearby on sign right click
+
+Options:
+	P: &5[&dSharedVault&5]&4 
+
+command /sv [<text>]:
+	executable by: players
+	trigger:
+		if argument is 1 is "on":
+			set {sv.%player%.status} to true
+		else if argument 1 is "off":
+			set {sv.%player%.status} to false
+		else if argument 1 is "help":
+			message "&5---------------------- &6Shared Vault &5-----------------------"
+			message "&5- &d/sv [on|off] &5- &dTurns on/off Shared SharedVault creation
+			message "&5- &d/sv help &5- &dThis menu"
+			message "&5- &d/sv about &5- &dInformation about SharedVault"
+		else if argument 1 is "about":
+			message "&5----------------- &6Shared Vault &5----------------------------"
+			message "&dSharedVault is a custom plugin created for QuartzCraft."
+			message "&dIt allows for a Vault to be shared by to other users.
+		else if arugment 1 is not set:
+			message "&5---------------------- &6Shared Vault &5-----------------------"
+			message "&5- &d/se [on|off] &5- &dTurns on/off Shared SharedvAULT creation
+			message "&5- &d/se help &5- &dThis menu"
+			message "&5- &d/se about &5- &dInformation about SharedVault"
+		else:
+			message "{@P} Unkown command! Do &6/sv help &d- for a list of commands!"			
+
+on sign change:
+	if {sv.%player%.status} is true:
+		if line 2 of block is player:
+			if line 1 of block is "vault":
+				set line 1 of block to "[S-VAULT]"
+		else if player has permission "qcz.se.bypass":
+			set {_sv.player} to player
+			message "{@P} Created a SharedEnderchest for %{_sv.player}%"
+		else:
+			message "{@P} You don't have permission to create SharedVault's for others!"
+			
+on right on a sign:
+	loop blocks in radius 2 of event-player:
+		loop-block is sign:
+			line 1 of loop-block is "[S-VAULT]":
+				set {_sv.player} to player
+				set {_sv.sign.owner} to line 2 of loop-block
+				if line 2 of loop-block is {_sv.player}:
+					execute op command "/vault {_sv.sign.owner} 1"
+				else if line 3 of loop-block is {_sv.player}:
+					execute op command "/vault {_sv.sign.owner} 1"
+				else if line 4 of loop-block is {_sv.player}:
+					execute op command "/vault {_sv.sign.owner} 1"
+				else:
+					message "{@P} Sorry! You haven't got permission to access this players vault!"
