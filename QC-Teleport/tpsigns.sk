@@ -2,7 +2,8 @@
 #- Add a limiter (Links to supporters benefits)
 #- Create a logger for when the TPSign's are created or removed
 #- Make a /tpsign mystats (Shows number of TPSign's that can be made and how many have been made)
-#- Check the location of TP for ANYTHING to prevent traps
+#- Check the location of TP for ANYTHING to prevent traps.
+# == Done partly, need to check above and minus Y for anything and to check that there is a solid block...
 #- Add support for nether portals? Not sure how it would work
 
 options:
@@ -11,6 +12,9 @@ options:
 	Stats: on
 	Enabled: on
 	Sign Radius: 3
+	v6: 5
+	v58: 56
+	v0: -1
 
 on Skript start:
 	broadcast "&3[&bTPSign&3] &bThis server is running &6TPSign - &bversion: &61.0.0"
@@ -132,8 +136,36 @@ on stepping on a pressure plate:
 						set {_x.c} to "%line 2 of loop-block%" parsed as number
 						set {_y.c} to "%line 3 of loop-block%" parsed as number
 						set {_z.c} to "%line 4 of loop-block%" parsed as number
-						execute console command "/tp %event-player% %{_x.c}% %{_y.c}% %{_z.c}%"
-						stop
+						if player is in world "world":
+							set {_tpsign.tploc} to the location at {_x.c}, {_y.c}, {_z.c} in world "world"
+							if block at {_tpsign.tploc} is air:
+								execute console command "/tp %event-player% %{_x.c}% %{_y.c}% %{_z.c}%"
+								stop
+							else:
+								message "&3[&bTPSign&3] &bThe location you're trying to be TPed to isn't air! So to save you the teleportation has been canceled"
+						else if player is in world "world_nether":
+							set {_tpsign.tploc} to the location at {_x.c}, {_y.c}, {_z.c} in world "world_nether"
+							if block at {_tpsign.tploc} is air:
+								execute console command "/tp %event-player% %{_x.c}% %{_y.c}% %{_z.c}%"
+								stop
+							else:
+								message "&3[&bTPSign&3] &bThe location you're trying to be TPed to isn't air! So to save you the teleportation has been canceled"
+						else if player is in world "world_the_end":
+							set {_tpsign.tploc} to the location at {_x.c}, {_y.c}, {_z.c} in world "world_the_end"
+							if block at {_tpsign.tploc} is air:
+								execute console command "/tp %event-player% %{_x.c}% %{_y.c}% %{_z.c}%"
+								stop
+							else:
+								message "&3[&bTPSign&3] &bThe location you're trying to be TPed to isn't air! So to save you the teleportation has been canceled"
+						else if player is in world "Redstone - QuartzCraft":
+							set {_tpsign.tploc} to the location at {_x.c}, {_y.c}, {_z.c} in world "Redstone - QuartzCraft"
+							if block at {_tpsign.tploc} is air:
+								execute console command "/tp %event-player% %{_x.c}% %{_y.c}% %{_z.c}%"
+								stop
+							else:
+								message "&3[&bTPSign&3] &bThe location you're trying to be TPed to isn't air! So to save you the teleportation has been canceled"
+						else:
+							message "&3[&bTPSign&3] &bYou're not in a supported world for TPSign!"
 		else:
 			message "&3[&bTPSign&3] &bSorry! But pressure plates aren't enabled!"
 	else if {Enabled} is off:
@@ -146,14 +178,12 @@ on rightclick on a sign:
 		if {Sign} is true:
 			loop blocks in radius {Sign Radius} of event-player:
 				loop-block is sign:
-					line 1 of loop-block is "[TPSIGN]":
+					if line 1 of loop-block is "[TPSIGN]":
 						set {_x.c} to "%line 2 of loop-block%" parsed as number
 						set {_y.c} to "%line 3 of loop-block%" parsed as number
 						set {_z.c} to "%line 4 of loop-block%" parsed as number
-						execute console command "/tp %event-player% %{_x.c}% %{_y.c}% %{_z.c}%"
-						stop
-		else:
-			message "&3[&bTPSign&3] &bSorry! But signs clicking isn't enabled!"
+					else:
+						message "&3[&bTPSign&3] &bSorry! But signs clicking isn't enabled!"
 	else if {Enabled} is off:
 		message "&3[&bTPSign&3] &bTPSigns is currently disabled! Do &6/tpsadmin tpsign on &b- to turn TPSign on!"
 	else:
