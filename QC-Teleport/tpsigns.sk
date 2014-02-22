@@ -12,9 +12,6 @@ options:
 	Stats: on
 	Enabled: on
 	Sign Radius: 3
-	v6: 5
-	v58: 56
-	v0: -1
 
 on Skript start:
 	broadcast "&3[&bTPSign&3] &bThis server is running &6TPSign - &bversion: &61.0.0"
