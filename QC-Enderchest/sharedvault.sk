@@ -4,31 +4,33 @@
 #Todo:
 #- Add a limiter (Links to supporter benefits)
 #- Make it check for an enderchest nearby on sign right click
+#- Fix a few bugs, including message order, creation, admin features and other stuffs
 
 Options:
-	P: &5[&dSharedVault&5]&4 
+	P: &5[&dSharedVault&5]&d 
 
 command /sv [<text>]:
 	executable by: players
 	trigger:
-		if argument is 1 is "on":
+		if argument 1 is "on":
 			set {sv.%player%.status} to true
+			message "{@P} Set your SharedVault status to: &6ON"
 		else if argument 1 is "off":
 			set {sv.%player%.status} to false
+			message "{@P} Set your SharedVault status to: &6OFF"
 		else if argument 1 is "help":
-			message "&5---------------------- &6Shared Vault &5-----------------------"
-			message "&5- &d/sv [on|off] &5- &dTurns on/off Shared SharedVault creation
+			message "&5-------------------- &6SharedVault &5--------------------"
+			message "&5- &d/sv [on|off] &5- &dTurns on/off Shared SharedVault creation"
 			message "&5- &d/sv help &5- &dThis menu"
 			message "&5- &d/sv about &5- &dInformation about SharedVault"
 		else if argument 1 is "about":
-			message "&5----------------- &6Shared Vault &5----------------------------"
+			message "&5-------------------- &6SharedVault &5--------------------"	
 			message "&dSharedVault is a custom plugin created for QuartzCraft."
-			message "&dIt allows for a Vault to be shared by to other users.
-		else if arugment 1 is not set:
-			message "&5---------------------- &6Shared Vault &5-----------------------"
-			message "&5- &d/se [on|off] &5- &dTurns on/off Shared SharedvAULT creation
-			message "&5- &d/se help &5- &dThis menu"
-			message "&5- &d/se about &5- &dInformation about SharedVault"
+			message "&dIt allows for a Vault to be shared by to other users."
+		else if argument 1 is "reload":
+			message "{@P} Reloading SharedVault!"
+			execute op command "/skript reload sharedvault"
+			message "{@P} Reloaded SharedVault!"
 		else:
 			message "{@P} Unkown command! Do &6/sv help &d- for a list of commands!"			
 
@@ -39,11 +41,11 @@ on sign change:
 				set line 1 of block to "[S-VAULT]"
 		else if player has permission "qcz.se.bypass":
 			set {_sv.player} to player
-			message "{@P} Created a SharedEnderchest for %{_sv.player}%"
+			message "{@P} Created a SharedVault for %{_sv.player}%"
 		else:
 			message "{@P} You don't have permission to create SharedVault's for others!"
-			
-on right on a sign:
+
+on rightclick on a sign:
 	loop blocks in radius 2 of event-player:
 		loop-block is sign:
 			line 1 of loop-block is "[S-VAULT]":
