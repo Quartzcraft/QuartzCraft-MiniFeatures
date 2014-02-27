@@ -4,12 +4,30 @@
 options:
 	P: &5[&dPlayerInfo&5]&d
 
-command /p <player> [admin]
+command /p <player> [admin]:
 	description: Main command
-	Usage: /p <playername> [admin]
 	trigger:
 		set {_player} to player-argument
 		if player-argument is not set:
-			message "{@P} You need to supply a player name!
+			message "{@P} You need to supply a player name!"
 		else:
-			message "{@P} Fetching records for: &6%{_player}%
+			message "{@P} Records For: &6%{_player}%"
+			message "{@P} Name: &6%{_player}%"
+			message "{@P} Group: 
+			
+command /ban <player> <text>:
+	description: Used to ban/log banning
+	permission: qcz.admin
+	trigger:
+		set {pi.%player%.banned} to true
+		set {pi.%player%.banreason} to argument 2
+		ban player-argument because of argument 2
+
+command /preload:
+	description: Reloads PlayerInfo
+	permission: qcz.admin
+	usage: /preload
+	trigger:
+		message "{@P} Reloading PlayerInfo..."
+		execute command "/skript reload PlayerInfo"
+		message "{@P} Reloaded PlayerInfo!"
