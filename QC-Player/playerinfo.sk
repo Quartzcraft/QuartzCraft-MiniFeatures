@@ -3,6 +3,13 @@
 
 options:
 	P: &5[&dPlayerInfo&5]&d
+	
+on join:
+	set {pi.%player%.online} to "&aYes!"
+	set {pi.%player%.banned} to "&aNot Banned"
+	
+on leave
+	set {pi.%player%.online} to "&4No!"
 
 command /p <player> [admin]:
 	description: Main command
@@ -13,13 +20,17 @@ command /p <player> [admin]:
 		else:
 			message "{@P} Records For: &6%{_player}%"
 			message "{@P} Name: &6%{_player}%"
-			message "{@P} Group: 
+			message "{@P} Group: &6Coming Soon!"
+			message "{@P} Online: %{si.%{_player}%.online}%"
+			messsge "{@P} Ban Status: %{pi.%{_player}%.banned}
+			if {pi.%{_player}%.banned} = "&4Banned":
+				message "{@P} Ban Reason: %{pi.%{_player}%.banreason}"
 			
 command /ban <player> <text>:
 	description: Used to ban/log banning
 	permission: qcz.admin
 	trigger:
-		set {pi.%player%.banned} to true
+		set {pi.%player%.banned} to "&4Banned"
 		set {pi.%player%.banreason} to argument 2
 		ban player-argument because of argument 2
 
