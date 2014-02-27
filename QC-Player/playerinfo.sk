@@ -1,0 +1,15 @@
+#PlayerInfo.sk
+#This script is made by QuartzCraft for use on QuartzCraft.
+
+options:
+	P: &5[&dPlayerInfo&5]&d
+
+command /p <player> [admin]
+	description: Main command
+	Usage: /p <playername> [admin]
+	trigger:
+		set {_player} to player-argument
+		if player-argument is not set:
+			message "{@P} You need to supply a player name!
+		else:
+			message "{@P} Fetching records for: &6%{_player}%
