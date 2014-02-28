@@ -7,8 +7,11 @@ options:
 on join:
 	set {pi.%player%.online} to "&aYes!"
 	set {pi.%player%.banned} to "&aNot Banned"
-	
-on leave
+	set {Now.%player%} to difference between {leave.%player%} and now
+	wait 2 seconds
+	message "&eWe've Missed You For The: %{Now.%player%}%
+on leave:
+	set {leave.%player%} to now
 	set {pi.%player%.online} to "&4No!"
 
 command /p <player> [admin]:
@@ -22,7 +25,10 @@ command /p <player> [admin]:
 			message "{@P} Name: &6%{_player}%"
 			message "{@P} Group: &6Coming Soon!"
 			message "{@P} Online: %{si.%{_player}%.online}%"
-			messsge "{@P} Ban Status: %{pi.%{_player}%.banned}
+			if {si.%{_player}%.online} = "&4No!":
+				set {Now.%{_player}%} to difference between {leave.%{_player}%} and now
+				message "{@P} Last Online: %{Now.%{_player}%}
+			messsge "{@P} Ban Status: %{pi.{_player}.banned}
 			if {pi.%{_player}%.banned} = "&4Banned":
 				message "{@P} Ban Reason: %{pi.%{_player}%.banreason}"
 			
