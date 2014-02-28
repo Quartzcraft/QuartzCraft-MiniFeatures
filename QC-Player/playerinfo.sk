@@ -3,21 +3,21 @@
 
 options:
 	P: &5[&dPlayerInfo&5]&d
-	
+
 on join:
-	set {pi.%player%.online} to "&aYes!"
-	set {pi.%player%.banned} to "&aNot Banned"
+	set {pi.%player%.online} to "Yes!"
+	set {pi.%player%.banned} to "Not Banned"
 	set {Now.%player%} to difference between {leave.%player%} and now
 	wait 2 seconds
-	message "&eWe've Missed You For The: %{Now.%player%}%
-on leave:
+	message "&eWe've missed you for the: %{Now.%player%}% - You were gone!"
+on quit:
 	set {leave.%player%} to now
 	set {pi.%player%.online} to "&4No!"
 
-command /p <player> [admin]:
+command /p <offline player> [admin]:
 	description: Main command
 	trigger:
-		set {_player} to player-argument
+		set {_player} to %offlineplayer-argument%
 		if player-argument is not set:
 			message "{@P} You need to supply a player name!"
 		else:
@@ -25,20 +25,25 @@ command /p <player> [admin]:
 			message "{@P} Name: &6%{_player}%"
 			message "{@P} Group: &6Coming Soon!"
 			message "{@P} Online: %{si.%{_player}%.online}%"
-			if {si.%{_player}%.online} = "&4No!":
+			if {si.%{_player}%.online} = "No!":
 				set {Now.%{_player}%} to difference between {leave.%{_player}%} and now
-				message "{@P} Last Online: %{Now.%{_player}%}
-			messsge "{@P} Ban Status: %{pi.{_player}.banned}
-			if {pi.%{_player}%.banned} = "&4Banned":
-				message "{@P} Ban Reason: %{pi.%{_player}%.banreason}"
-			
-command /ban <player> <text>:
-	description: Used to ban/log banning
-	permission: qcz.admin
+				message "{@P} Last Online: %{Now.%{_player}%}%"
+				#messsge "{@P} Ban Status: %{pi.%{_player}%.banned}%"
+			if {pi.%{_player}%.banned} = "Banned":
+				message "{@P} Ban Reason: %{pi.%{_player}%.banreason}%"
+
+command /ban <offline player> <text>:
+	description: Bans a player
+	usage: /ban <player> <reason>
+	permission: qcz.mod
+	permission message: &4You don't have permission!
+	executable by: players, console
 	trigger:
+		kick offlineplayer-argument due to "%argument 2%"
+		ban "%offlineplayer-argument%"
+		broadcast "&e%offlineplayer-argument% &6was banned by &a%player%. &6Reason: &e%argument-2%"
 		set {pi.%player%.banned} to "&4Banned"
-		set {pi.%player%.banreason} to argument 2
-		ban player-argument because of argument 2
+		set {pi.%player%.banreason} to "%argument 2%"
 
 command /preload:
 	description: Reloads PlayerInfo
@@ -46,5 +51,5 @@ command /preload:
 	usage: /preload
 	trigger:
 		message "{@P} Reloading PlayerInfo..."
-		execute command "/skript reload PlayerInfo"
+		execute op command "/skript reload PlayerInfo"
 		message "{@P} Reloaded PlayerInfo!"
