@@ -1,0 +1,1043 @@
+options:
+	E-Logo: &2[&6Kingdoms&2] <reset>
+
+	# ----- General Settings ----- #
+	Eco-Mode: Power
+	#(Power | SkEconomy | Vault) Defaults to Power
+
+	Homes-Enabled: True
+	# Allows players to use the /k home and /k sethome commands.
+	Homes-Spawn: True
+	# Respawn the player at their Kingdom's home location? (Will work even if home commands are disabled)
+
+	Illegal-Names: "<none>", "None", "Safezone", "Village" or "Admin"
+	# List of names that cannot be used in a Kingdom name
+
+	Check-Time: 1
+	# This will control the delay (in ticks) for the periodical events. While making this option bigger can reduce lag, it will also increase the time lag between the messages when moving across chunks
+
+	War: On
+
+	# ----- Power Mode Settings ----- #
+
+	Max-Power: 10
+	# Max amount of power a player can have
+
+	Min-Power: 0
+	# Minimum amount of power a player can have. Set to a negative number to allow players to have negative power
+
+	Start-Power: 5
+	# The amount of power new players start off with
+
+	Loss-Power: 1
+	# The amount of power you will loose when you die
+
+	Mod-Power: 1
+	# The amount of extra power that Knights loose when they die (Kings is twice this amount)
+
+	Reg-Power: 1
+	# How much power is regained after one minute
+
+
+	# ----- Vault/SkEconomy Settings ----- #
+	Cost-create-Kingdom: 0
+	Cost-per-claim: 0
+	Cost-per-death: 0
+	# Make the death cost huge to take all money
+	Cost-home: 0
+	# Cost to teleport home
+	
+	Refund-percent: 0
+	# The percent of funds that are given back when a chunk is unclaimed.
+	Max-Land: 20
+	# The max amount of land a Kingdom can buy
+
+	Money: Quartz
+	# What is the name you want Kingdoms to call the currency?
+
+	# ----- Chat Settings ----- #
+	Chat-Enabled: True
+
+	Emperor-Prefix: *** #Emperors do not exist yet. This is just a placeholder
+	King-Prefix: <dark gray>[<purple>K<dark gray>]
+	Knight-Prefix: <dark gray>[<lime>K<dark gray>]
+	Noble-Prefix: <dark gray>[<lime>N<dark gray>]
+	Upperclass-Prefix: <dark gray>[<lime>U<dark gray>]
+	Citizen-Prefix: <dark gray>[<white>C<dark gray>]
+	# Prefixes for leaders of a Kingdom
+
+	Chat-Format: %{_prefix}%%{_Kingdom.name}% %{_relation.colour}%%player%<r>
+	# How the chat should look
+	Chat-Default: &eWanderer<r>
+	# What should the prefix be for Kingdomless players?
+	Chat-Enemy: <light red>
+	Chat-Neutral: <white>
+	Chat-Ally: <light green>
+	# What colours should be used for each relation status?
+
+	# ----- Kingdom Settings ----- #
+	Protected: furnace, burning furnace, chest, wood door, dispenser, stone button, wood button or lever
+	# List of blocks that are protected from outside players. All blocks will still be protected from being broken.
+	Can-Place: air
+	# List of blocks that anyone can place in any Kingdom's land.
+	Can-Break: air
+	# List of blocks that anyone can break in any Kingdom's land.
+	Pain-Build: 0
+	# How much should a player be punished for trying to break/place/use protected blocks, in another's land? (Set to 0 to turn off pain build. Still gives recoil)
+	Contiguous: False
+	# Should all of the claimed land for a Kingdom be right next to each other?
+
+	# Other settings for Kingdom protection
+	Fire-Spread: False
+	Explosions: False
+	Open: False
+	# This is a global option for now, but may become per Kingdom in the future.
+
+	armour: 0.5
+	# How much damage is reduced when a player is attacked in their own territory (1 armour = 1 full heart)
+
+	Friendly-Fire: False
+	# Allow players to kill others in their Kingdom?
+
+	Safezone-Desc: Safezone - Protected Area
+	# The description for Safezones
+	Mech-Desc: A Small Village
+	# The description for a Mech/Neutral Village
+
+	# ----- Utility (Don't change these) ----- #
+	Valid-Commands-E: "help", "h", "new", "desc", "invite", "join", "kick", "leave", "claim", "unclaim", "list", "land", "home", "sethome", "map", "info", "power", "promote", "demote", "chat", "c", "cost", "deposit", "withdraw", "relation", "r" or "description"
+	Valid-Commands-A: "help", "h", "reload", "clear", "enableworld", "enablew", "worldenable", "disableworld", "disablew", "worlddisable", "claim", "unclaim", "setpower", "test", "info", "bypass" or "disband"
+
+variables:
+	{king.k.%player%.Kingdom} = "None"
+	{king.k.%player%.rank} = "None"
+	{king.k.%player%.invited} = "None"
+	#{king.k.%player.bypass} holds the admin bypass mode for the player
+	#{king.k.%player%.inactive-time} holds the last time the player logged in.
+	#{king.k.%player%.lastchunk} holds the last chunk the player was at for messaging.
+	#{king.k.%player%.power} = {@Start-Power}
+	#{king.k.Kingdomlist::*} holds all the names of the cities
+	#{king.k.land::*} holds the land for all factions
+	#{king.k.%Kingdom%.landcount} holds the amount of claimed chunks a Kingdom has.
+	#{king.k.%Kingdom%.members::*} holds all the members of the Kingdom
+	#{king.k.%Kingdom%.relations::%other Kingdom%} = "relation status"
+	#{king.k.%Kingdom%.power} holds the Kingdom's total power
+	#{king.k.%Kingdom%.King} holds the player that owns the Kingdom
+	#{king.k.%Kingdom%.desc} holds the Kingdom's description
+	#{king.k.%Kingdom%.home} holds the home location for the Kingdom
+	#{king.k.%Kingdom%.home-chunk} holds the home chunk of a Kingdom (For war purposes)
+	#{king.k.%Kingdom%.bank} holds the amount of money in the Kingdom bank
+
+	#{king.k.worlds::%world%} = true/false
+
+	#{skeconomy.%player%.money.total} = The money variable in SkEconomy.
+on join:
+	if {king.k.%player%.invited} is not set:
+		set {king.k.%player%.invited} to "None"
+	if {king.k.%player%.power} is not set:
+		set {king.k.%player%.power} to {@Start-Power}
+	#set {king.k.%player%.inactive-time} to now
+	if {king.k.%player%.lastchunk} is not set:
+		set {king.k.%player%.lastchunk} to "None"
+
+command /Kingdom [<text="help">] [<text="1">] [<text>]:
+	permission: sk.Kingdoms.command, sk.Kingdoms.%arg 1%, sk.Kingdoms.admin
+	description: Base user command for factions
+	executable by: players
+	aliases: /k, /king,
+	trigger:
+		#Ranks: Emperor, King, Knight, Citizen
+		if arg 1 is not {@Valid-Commands-E}:
+			message "{@E-Logo}&cThat is not a valid command!"
+			stop trigger
+		if arg 1 is "h" or "help":
+			if arg 2 is not "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9" or "10":
+				message "{@E-Logo}&cThat is not a valid help number!"
+				stop trigger
+			set {_max.help} to 3#This is to change the amount of help pages in the message until I finish it.
+			message "&e[---------------[&aKingdom Help (%arg 2%/3)&e]---------------]"
+			if arg 2 is "1":
+				message "&a/k new <Kingdom name>&7 - Creates a new Kingdom!"
+				message "&a/k desc <description>&7 - Add a description to your Kingdom"
+				message "&a/k invite <player>&7 - Invite a player to your Kingdom!"
+				message "&a/k join <Kingdom name>&7 - Become a citizen of a Kingdom!"
+				message "&a/k kick <player>&7 - Kicks the player from your Kingdom."
+				message "&a/k leave&7 - Leave your current Kingdom :("
+				message "&a/k claim&7 - Claim land for your Kingdom"
+				message "&a/k unclaim&7 - Remove your claim of the land"
+			if arg 2 is "2":
+				message "&a/k sethome&7 - Sets your Kingdom home!"
+				message "&a/k home&7 - Teleport to your Kingdom home!"
+				message "&a/k promote <player>&7 - Rank up a player in your Kingdom!"
+				message "&a/k demote <player>&7 - Revoke Knight rights of a player!"
+				message "&a/k power&7 - Displays your power."
+				message "&a/k list&7 - Lists all current cities."
+				message "&a/k land&7 - Test feature that tells you if you are in a Kingdom's land."
+				message "&a/k help&7 - Displays the help for Kingdoms!"
+			if arg 2 is "3":
+				message "&a/k chat <message>&7 - Sends a message to only your Kingdom!"
+				message "&a/k cost&7 - Displays how much money certain commands cost."
+				message "&a/k deposit&7 - Add money to the Kingdom bank!"
+				message "&a/k withdraw&7 - Take money from the Kingdom bank!"
+				message "&a/k relation <Ally|Enemy|Neutral> <Kingdom> - Set your relation  to another Kingdom!"
+		#Worlds check
+		if {king.k.worlds::%player's world%} is false:
+			message "{@E-Logo}&cThis world does not have Kingdoms enabled!"
+			stop trigger
+
+		if arg 1 is "create" or "new":
+			if {king.k.%player%.Kingdom} is not "None":
+				message "{@E-Logo}&cYou have to leave your current Kingdom to make a new one!"
+				stop trigger
+			if arg 2 is {@Illegal-Names}:
+				message "{@E-Logo}&4You cannot name a Kingdom ""%arg 2%""!"
+				stop trigger
+			loop {king.k.Kingdomlist::*}:
+				if arg 2 is loop-value:
+					message "{@E-Logo}&cThere is already another Kingdom by that name!"
+					stop trigger
+			if "{@Eco-Mode}" is "SkEconomy":
+				if {skeconomy.%player%.money.total} is less than {@Cost-create-Kingdom}:
+					message "{@E-Logo}&cYou don't have enough money to create a Kingdom!"
+					stop trigger
+				else:
+					subtract {@Cost-create-Kingdom} from {skeconomy.%player%.money.total}
+			if "{@Eco-Mode}" is "Vault":
+				set {_money} to player's money
+				if {_money} is less than {@Cost-create-Kingdom}:
+					message "{@E-Logo}&cYou don't have enough money to create a Kingdom!"
+					stop trigger
+				else:
+					subtract {@Cost-create-Kingdom} from player's money
+			set {_Kingdom.name} to arg 2#This is to allow more clarity in the code.
+			add {_Kingdom.name} to {king.k.Kingdomlist::*}
+			set {king.k.%{_Kingdom.name}%.King} to name of player
+			set {king.k.%{_Kingdom.name}%.landcount} to 0
+			set {king.k.%{_Kingdom.name}%.bank} to 0
+			set {king.k.%player%.rank} to "King"
+			set {king.k.%player%.Kingdom} to {_Kingdom.name}
+			message "{@E-Logo}&aYou have created the new Kingdom %{_Kingdom.name}%! You should now add a description with &3/k desc <desc>"
+			add player to {king.k.%{_Kingdom.name}%.members::*}
+			set {king.k.%{_Kingdom.name}%.desc} to "Land of %{_Kingdom.name}%"
+			stop trigger
+		if arg 1 is "description" or "desc":
+			if {king.k.%player%.rank} is "King":
+				set {king.k.%{king.k.%player%.Kingdom}%.desc} to arg 2
+				message "{@E-Logo}&aYour Kingdom description is now ""&2%arg 2%&a"""
+		if arg 1 is "invite":
+			make player execute command "/Kingdomsworkaround invite %arg 2%"
+		if arg 1 is "promote":
+			make player execute command "/Kingdomsworkaround promote %arg 2%"
+		if arg 1 is "demote":
+			make player execute command "/Kingdomsworkaround demote %arg 2%"
+		if arg 1 is "info":
+			message "{@E-Logo}&bPlayer Info:&2 %name of player%"
+			message "&9Invites: &a%{king.k.%player%.invited}%"
+			message "&9Kingdom: &a%{king.k.%player%.Kingdom}%"
+			message "&9Rank: &a%{king.k.%player%.rank}%"
+			if {king.k.%player%.Kingdom} is not "None":
+				message "{@E-Logo}&bKingdom Info: &2%{king.k.%player%.Kingdom}%"
+				message "&9Leader: &6%{king.k.%{king.k.%player%.Kingdom}%.King}%"
+				set {_mem} to ""
+				set {_comma} to ""
+				loop {king.k.%{king.k.%player%.Kingdom}%.members::*}:
+					if {king.k.%loop-value%.rank} is "King":
+						set {_mem} to "%{_mem}%%{_comma}%&6%loop-value%"
+					if {king.k.%loop-value%.rank} is "Knight":
+						set {_mem} to "%{_mem}%%{_comma}%&b%loop-value%"
+					if {king.k.%loop-value%.rank} is "Noble":
+						set {_mem} to "%{_mem}%%{_comma}%&b%loop-value%"
+					if {king.k.%loop-value%.rank} is "Upperclass":
+						set {_mem} to "%{_mem}%%{_comma}%&a%loop-value%"
+					if {king.k.%loop-value%.rank} is "Knight":
+						set {_mem} to "%{_mem}%%{_comma}%&b%loop-value%"
+					set {_comma} to ", "
+				message "&9Members: %coloured {_mem}%"
+				message "&9Total Claimed Land: &6%{king.k.%{king.k.%player%.Kingdom}%.landcount}%"
+				#add mod colouring or separate list.
+				if "{@Eco-Mode}" is "Vault" or "SkEconomy":
+					message "&9Bank: &6%{king.k.%{king.k.%player%.Kingdom}%.bank}%"
+				else:
+					loop {king.k.%{king.k.%player%.Kingdom}%.members::*}:
+						add {king.k.%loop-value%.power} to {_total.power}
+					set {_max} to {@Max-Power} * size of {king.k.%{king.k.%player%.Kingdom}%.members::*}
+					message "&9Total Power: &d%{_total.power}%/%{_max}%"
+		if arg 1 is "chat" or "c":
+			loop {king.k.%{king.k.%player%.Kingdom}%.members::*}:
+				if loop-value is online:
+					send "&8[<r>%{king.k.%player%.Kingdom}% - %player%&8] <r>&e%uncoloured arg 2%" to loop-value
+		if arg 1 is "cost":
+			if "{@Eco-Mode}" is not "Vault" or "SkEconomy":
+				message "{@E-Logo}&cThere are no costs in &dPower&c mode!"
+				stop trigger
+			message "{@E-Logo}&bCost:"
+			message "&9New Kingdom: &e{@Cost-create-Kingdom}"
+			message "&9Claim: &e{@Cost-per-claim}"
+			if "{@Homes-Enabled}" is "True" or "true" or "on" or "On":
+				message "&9Home: &e{@Cost-home}"
+		if arg 1 is "deposit":
+			make player execute command "/Kingdomsworkaround deposit %name of player% %arg 2%"
+		if arg 1 is "withdraw":
+			make player execute command "/Kingdomsworkaround withdraw %name of player% %arg 2%"
+		if arg 1 is "power":
+			if "{@Eco-Mode}" is "Vault" or "SkEconomy":
+				message "{@E-Logo}&CPower mode is not enabled!"
+				stop trigger
+			message "{@E-Logo}&5Power: &d%{king.k.%player%.power}%/{@Max-Power}"
+			if {king.k.%player%.Kingdom} is "None":
+				stop trigger
+			execute console command "Kingdomsworkaround calcpower %player%"
+			message "&b%{king.k.%player%.Kingdom}%&b's power: &d%{king.k.%{king.k.%player%.Kingdom}%.power}%"
+			message "&b%{king.k.%player%.Kingdom}%&b's claimed land: &6%{king.k.%{king.k.%player%.Kingdom}%.landcount}%"
+		if arg 1 is "join":
+			if {king.k.%player%.Kingdom} is not "None":
+				message "{@E-Logo}&cYou can only be part of one Kingdom at a time!"
+				stop trigger
+			if "{@Open}" is "False" or "false" or "off" or "Off":
+				if {king.k.%player%.invited} is not arg 2:
+					message "{@E-Logo}&cYou are not invited to join that Kingdom!"
+					stop trigger
+			set {_cont} to false
+			loop {king.k.Kingdomlist::*}:#Contains expression/kondition
+				if loop-value is arg 2:
+					set {_cont} to true
+					exit loop
+			if {_cont} is true:
+				set {king.k.%player%.Kingdom} to {king.k.%player%.invited}
+				loop {king.k.%arg 2%.members::*}:
+					send "{@E-Logo}&3%player%&a has joined %{king.k.%player%.Kingdom}%" to loop-value
+				set {king.k.%player%.invited} to "None"
+				set {king.k.%player%.rank} to "Citizen"
+				add player to {king.k.%arg 2%.members::*}
+				message "{@E-Logo}&aYou have successfully joined the Kingdom of &2%{king.k.%player%.Kingdom}%&a!"
+			if {_cont} is false:
+				message "{@E-Logo}&cThat Kingdom doesn't exist!"
+				stop trigger
+		if arg 1 is "kick":
+			make player execute command "/Kingdomsworkaround kick %arg 2%"
+		if arg 1 is "leave":
+			if {king.k.%player%.Kingdom} is "None":
+				message "{@E-Logo}&cYou don't have a Kingdom!"
+				stop trigger
+			else if {king.k.%player%.rank} is "King":
+				message "{E-Logo}You must do /k disband or /k king <player> - to leave!"
+				#execute console command "ea disband %{king.k.%player%.Kingdom}%"
+			else:
+				remove player from {king.k.%{king.k.%player%.Kingdom}%.members::*}
+				set {king.k.%player%.rank} to "None"
+				set {king.k.%player%.Kingdom} to "None"
+			
+			message "{@E-Logo}&cYou have left your Kingdom!"
+		if arg 1 is "claim":
+			if player is in worlds "New_World":
+				if {king.k.%player%.Kingdom} is "None":
+					message "{@E-Logo}&cYou must have a Kingdom to claim land!"
+					stop trigger
+				if {king.k.%player%.rank} is "King" or "Knight":
+					set {_Kingdom.name} to {king.k.%player%.Kingdom} #for clarity
+					if {king.k.land::%chunk at player%} is {_Kingdom.name}:
+						message "{@E-Logo}&cYou have already claimed this chunk!"
+						stop trigger
+					if "{@Contiguous}" is not "False", "false", "off" or "Off":
+						if {king.k.%{king.k.%player%.Kingdom}%.landcount} is not 0:
+							set {_chunkN} to chunk at block 16 meters north of player
+							set {_chunkS} to chunk at block 16 meters south of player
+							set {_chunkE} to chunk at block 16 meters east of player
+							set {_chunkW} to chunk at block 16 meters west of player
+							{king.k.%player%.Kingdom} is not {king.k.land::%{_chunkN}%}
+							{king.k.%player%.Kingdom} is not {king.k.land::%{_chunkS}%}
+							{king.k.%player%.Kingdom} is not {king.k.land::%{_chunkE}%}
+							{king.k.%player%.Kingdom} is not {king.k.land::%{_chunkW}%}
+							message "{@E-Logo}&cYou must claim land in a single group!"
+							stop trigger
+					if "{@Eco-Mode}" is not "Vault" or "SkEconomy":
+						loop {king.k.%{_Kingdom.name}%.members::*}:
+							add {king.k.%loop-value%.power} to {_maxclaim}
+						if {king.k.%{_Kingdom.name}%.landcount} is greater than or equal to {_maxclaim}:
+							message "{@E-Logo}&cYou can't claim more than %{_maxclaim}% chunks!"
+							stop trigger
+					if {king.k.land::%chunk at player%} is set:
+						if "{@Eco-Mode}" is not "Vault" or "SkEconomy":
+							"{@War}" is "on" or "true"
+							set {_other.Kingdom} to {king.k.land::%chunk at player%}
+							set {king.k.%{_other.Kingdom}%.power} to 0
+							if size of {king.k.%{_other.Kingdom}%.members::*} is 0:
+								message "{@E-Logo}&cYou cannot claim in the server's land!"
+								stop trigger
+							loop {king.k.%{_other.Kingdom}%.members::*}:
+								add {king.k.%loop-value%.power} to {king.k.%{_other.Kingdom}%.power}
+							if {king.k.%{_other.Kingdom}%.power} is less than {king.k.%{_other.Kingdom}%.landcount}:
+								message "More power"
+								set {king.k.land::%chunk at player%} to {_Kingdom.name}
+								subtract 1 from {king.k.%{_other.Kingdom}%.landcount}
+								add 1 to {king.k.%{_Kingdom.name}%.landcount}
+								message "{@E-Logo}&You claimed this chunk from %{_other.Kingdom}%"
+								stop trigger
+						message "{@E-Logo}&cYou cannot claim land in another Kingdom!"
+						stop trigger
+					if "{@Eco-Mode}" is "Vault" or "SkEconomy":
+						if {king.k.%{_Kingdom.name}%.landcount} is greater than or equal to {@Max-Land}:
+							message "{@E-Logo}&cYou can't make your Kingdom any bigger!"
+							stop trigger
+						set {_money} to {king.k.%{king.k.%player%.Kingdom}%.bank}
+						if {_money} is less than {@Cost-per-claim}:
+							message "{@E-Logo}&cThe Kingdom bank doesn't have enough money to claim anymore land!"
+							stop trigger
+						else:
+							subtract {@Cost-per-claim} from {king.k.%{king.k.%player%.Kingdom}%.bank}
+						#Effect of claiming land
+					if {king.k.land::%chunk at player%} is not set:
+						if {king.k.%{_Kingdom.name}%.landcount} is 0:
+							set {king.k.%{_Kingdom.name}%.home-chunk} to chunk at player
+							message "{@E-Logo}&bYour home chunk has been claimed!"
+						set {king.k.land::%chunk at player%} to {_Kingdom.name}
+						add 1 to {king.k.%{_Kingdom.name}%.landcount}
+						message "{@E-Logo}&aYou have claimed this chunk!"
+						stop trigger
+			else:
+				message "{@E-Logo} The world you're currently in doesn't support land claming!"
+		if arg 1 is "unclaim":
+			if player is in worlds "New_World":
+				if {king.k.%player%.Kingdom} is "None":
+					message "{@E-Logo}&cYou aren't part of a Kingdom!"
+					stop trigger
+				if {king.k.land::%chunk at player%} is not set:
+					message "{@E-Logo}&cYou can't unclaim the wilderness!"
+					stop trigger
+				if {king.k.%player%.rank} is "King" or "Knight":
+					if {king.k.land::%chunk at player%} is {king.k.%player%.Kingdom}:
+						if "{@Eco-Mode}" is "Vault" or "SkEconomy":
+							set {_ref} to floor({@Cost-per-claim}*({@Refund-percent}/100))
+							add {_ref} to {king.k.%{king.k.%player%.Kingdom}%.bank}
+							message "{@E-Logo}&aThe bank has been refunded &e%{_ref}%&a money for unclaiming this land."
+						delete {king.k.land::%chunk at player%}
+						subtract 1 from {king.k.%{king.k.%player%.Kingdom}%.landcount}
+						message "{@E-Logo}&cYou have forsaken this land!"
+			else:
+				message "{@E-Logo} The world you're currently in doesn't support land claming!"
+		if arg 1 is "list":
+			message "&e//---------------[&2Kingdom List&e]---------------\\"
+			loop {king.k.Kingdomlist::*}:
+				message "&bKingdom: &3%loop-value%"
+				message "&bLeader: &3%{king.k.%loop-value%.King}%"
+				message " "
+		if arg 1 is "land":
+			if {king.k.land::%chunk at player%} is set:
+				message "{@E-Logo}&aYou are in &3%{king.k.land::%chunk at player%}%'s&a land"
+				if {king.k.%{king.k.%player%.Kingdom}%.home-chunk} is chunk at player:
+					message "&e~ &bHome of %{king.k.%player%.Kingdom}%"
+			else:
+				message "{@E-Logo}&eYou are in Wilderness!"
+		if arg 1 is "relation" or "r":
+			if arg 2 is not "Enemy", "enemy", "Ally" or "Neutral":
+				message "{@E-Logo}&ePlease choose {@Chat-Ally}Ally&e, {@Chat-Enemy}Enemy&e, or {@Chat-Neutral}Neutral."
+				stop trigger
+			loop {king.k.Kingdomlist::*}:
+				if arg 3 is loop-value:
+					set {_Kingdom} to loop-value
+			if {_Kingdom} is not set:
+				message "{@E-Logo}&cThat is not a valid Kingdom!"
+				stop trigger
+			if {king.k.%player%.rank} is not "King" or "Knight":
+				message "{@E-Logo}&cYou are not a high enough rank to set relations!"
+				stop trigger
+			set {king.k.%{king.k.%player%.Kingdom}%.relations::%{_Kingdom}%} to "%arg 2%"
+			message "{@E-Logo}&aYou have changed your desired relation to &e%arg 2%&a with &e%{_Kingdom.other}%"
+		if arg 1 is "home":
+			if "{@Homes-Enabled}" is not "True" or "true" or "on" or "On":
+				message "{@E-Logo}&cHomes have been disabled on this server!"
+				stop trigger
+			if {king.k.%player%.Kingdom} is "None":
+				message "{@E-Logo}&cYou don't have a Kingdom!"
+				stop trigger
+			if {king.k.%{king.k.%player%.Kingdom}%.home} is not set:
+				message "{@E-Logo}&cYour Kingdom's home has not been set!"
+				stop trigger
+			else:
+				if "{@Eco-Mode}" is "Vault":
+					set {_money} to player's money
+					if {_money} is less than {@Cost-home}:
+						message "{@E-Logo}&cYou don't have enough money to teleport home!"
+						stop trigger
+					else:
+						subtract {@Cost-home} from {skeconomy.%player%.money.total}
+				if "{@Eco-Mode}" is "SkEconomy":
+					if {skeconomy.%player%.money.total} is less than {@Cost-home}:
+						message "{@E-Logo}&cYou don't have enough money to teleport home!"
+						stop trigger
+					else:
+						subtract {@Cost-home} from {skeconomy.%player%.money.total}
+				teleport player to {king.k.%{king.k.%player%.Kingdom}%.home}
+				message "{@E-Logo}&bWelcome home!"
+		if arg 1 is "sethome":
+			if {king.k.%player%.Kingdom} is "None":
+				message "{@E-Logo}&cYou don't have a Kingdom!"
+				stop trigger
+			if {king.k.land::%chunk at player%} is not {king.k.%player%.Kingdom}:
+				message "{@E-Logo}&cYou can't set your Kingdom home outside of your Kingdom!"
+				stop trigger
+			if {king.k.%player%.rank} is "King" or "Knight":
+				if {king.k.%{king.k.%player%.Kingdom}%.home-chunk} is not chunk at player:
+					set {king.k.%{king.k.%player%.Kingdom}%.home-chunk} to chunk at player
+					message "{@E-Logo}&bYour home chunk has been moved here!"
+				set {king.k.%{king.k.%player%.Kingdom}%.home} to location of player
+				message "{@E-Logo}&bYou new home has been set to &3%location of player%"
+		if arg 1 is "map":
+			message "&3[&b-------&3[&eMap&3]&b-------]"
+			set {_mapX} to 9
+			set {_mapY} to 3
+			set {_m} to ""
+			loop 7 times:
+				loop 19 times:
+					set {_x} to {_mapX} * 16
+					set {_y} to {_mapY} * 16
+					set {_chunk} to chunk at block {_y} blocks north {_x} blocks west of player
+					if {king.k.land::%{_chunk}%} is set:
+						if {_chunk} is not chunk at player:
+							if {king.k.land::%{_chunk}%} is {king.k.%player%.Kingdom}:
+								set {_m} to "%{_m}%&a/"
+							else:
+								set {_m} to "%{_m}%&5/"
+					if {king.k.land::%{_chunk}%} is not set:
+						if {_chunk} is not chunk at player:
+							set {_m} to "%{_m}%&7-"
+					if {_chunk} is chunk at player:
+						set {_m} to "%{_m}%&6+"
+					subtract 1 from {_mapX}
+				message "%{_m}%"
+				set {_m} to ""
+				subtract 1 from {_mapY}
+				set {_mapX} to 9
+			
+
+command /Kingdomsworkaround <text> <player> [<integer=1>]:
+	usage: {@E-Logo}&c/k help
+	permission: sk.Kingdoms.%text arg%, sk.Kingdoms.command, sk.Kingdoms.admin
+	trigger:
+		if arg 1 is "invite":
+			if {king.k.%player%.rank} is "King" or "Knight":
+				set {king.k.%arg player%.invited} to {king.k.%player%.Kingdom}
+				message "{@E-Logo}&3%arg player%&a has been invited to join your Kingdom"
+				send "{@E-Logo}&aYou have been invited to join the &3%{king.k.%player%.Kingdom}%&a Kingdom!" to arg player
+				stop trigger
+			else if {king.k.%arg player%.Kingdom} is {king.k.%player%.Kingdom}:
+				message "{@E-Logo}&cThat player is already part of your Kingdom!"
+				stop trigger
+			else:
+				message "{@E-Logo}&cYou are not a high enough rank to invite others"
+		if arg 1 is "kick":
+			if {king.k.%player%.rank} is "King" or "Knight":
+				if {king.k.%player%.rank} is "Knight":
+					if {king.k.%arg player%.rank} is "King":
+						message "{@E-Logo}&cYou cannot kick a player of a higher rank!"
+						stop trigger
+					else:
+						set {king.k.%arg player%.Kingdom} to "None"
+						set {king.k.%arg player%.rank} to "None"
+						remove arg player from {king.k.%{king.k.%player%.Kingdom}%.members::*}
+						subtract 10 from {king.k.%{king.k.%player%.Kingdom}%.members::*}
+						send "{@E-Logo}&cYou have been kicked!" to arg player
+						message "{@E-Logo}&aYou have kicked: &c%arg player% &afrom &2%{king.k.%player%.Kingdom}%"
+				else:
+					set {king.k.%arg player%.Kingdom} to "None"
+					set {king.k.%arg player%.rank} to "None"
+					send "{@E-Logo}&cYou have been kicked!" to arg player
+					message "{@E-Logo}&aYou have kicked: &c%arg player% &afrom &2%{king.k.%player%.Kingdom}%"
+			else if {king.k.%arg player%.Kingdom} is not {king.k.%player%.Kingdom}:
+				message "{@E-Logo}&cYou can only kick players in your Kingdom!"
+				stop trigger
+			else:
+				message "{@E-Logo}&cYou are not a high enough rank to kick members"
+				stop trigger
+		if arg 1 is "promote":
+			if {king.k.%player%.Kingdom} is "None":
+				message "{@E-Logo}&cYou don't have a Kingdom!"
+				stop trigger
+			if {king.k.%player%.rank} is not "King":
+				message "{@E-Logo}&cOnly the Kingdom leader can promote others!"
+				stop trigger
+			if {king.k.%player%.Kingdom} is not {king.k.%arg player%.Kingdom}:
+				message "{@E-Logo}&cYou can only promote players in your Kingdom!"
+				stop trigger
+			if {king.k.%arg player%.rank} is "Knight" or "King":
+				message "{@E-Logo}&cThat player is already promoted!"
+				stop trigger
+			else if {king.k.%arg player%.rank} is "Citizen":
+				set {king.k.%arg player%.rank} to "Upperclass"
+				message "{@E-Logo}&3%arg player%&a has been promoted!"
+				send "{@E-Logo}&aYou have been promoted!" to arg player
+			else if {king.k.%arg player%.rank} is "Upperclass":
+				set {king.k.%arg player%.rank} to "Noble"
+				message "{@E-Logo}&3%arg player%&a has been promoted!"
+				send "{@E-Logo}&aYou have been promoted!" to arg player
+			else if {king.k.%arg player%.rank} is "Noble":
+				set {king.k.%arg player%.rank} to "Knight"
+				message "{@E-Logo}&3%arg player%&a has been promoted!"
+				send "{@E-Logo}&aYou have been promoted!" to arg player
+		if arg 1 is "demote":
+			if {king.k.%player%.Kingdom} is "None":
+				message "{@E-Logo}&cYou don't have a Kingdom!"
+				stop trigger
+			if {king.k.%player%.rank} is not "King":
+				message "{@E-Logo}&cOnly the Kingdom leader can demote others!"
+				stop trigger
+			if {king.k.%player%.Kingdom} is not {king.k.%arg player%.Kingdom}:
+				message "{@E-Logo}&cYou can only demote players in your Kingdom!"
+				stop trigger
+			if {king.k.%arg player%.rank} is "Citizen":
+				message "{@E-Logo}&cThere isn't a lower rank for that player!"
+				stop trigger
+			else if {king.k.%arg player%.rank} is "Upperclass":
+				set {king.k.%arg player%.rank} to "Citizen"
+				message "{@E-Logo}&3%arg player%&a has been demoted!"
+				send "{@E-Logo}&aYou have been demoted!" to arg player
+			else if {king.k.%arg player%.rank} is "Noble":
+				set {king.k.%arg player%.rank} to "Upperclass"
+				message "{@E-Logo}&3%arg player%&a has been demoted!"
+				send "{@E-Logo}&aYou have been demoted!" to arg player
+			else if {king.k.%arg player%.rank} is "Knight":
+				set {king.k.%arg player%.rank} to "Noble"
+				message "{@E-Logo}&3%arg player%&a has been demoted!"
+				send "{@E-Logo}&aYou have been demoted!" to arg player
+		if arg 1 is "deposit":
+			if arg 3 is less than 0:
+				message "{@E-Logo}&cYou can't use a negitive number!"
+				stop trigger
+			if {king.k.%player%.Kingdom} is "None":
+				message "{@E-Logo}&cYou don't have a Kingdom!"
+				stop trigger
+			if "{@Eco-Mode}" is not "Vault" nor "SkEconomy":
+				message "{@E-Logo}&cThere is no Kingdom bank in power mode!"
+				stop trigger
+			if {king.k.%player%.rank} is not "King" or "Knight":
+				message "{@E-Logo}&cYou are not a high enough rank to withdraw from the Kingdom bank!"
+				stop trigger
+			if "{@Eco-Mode}" is "Vault":
+				if player's money is less than arg 3:
+					message "{@E-Logo}&cYou don't have that much money!"
+					stop trigger
+				else:
+					subtract arg 3 from player's money
+					add arg 3 to {king.k.%{king.k.%player%.Kingdom}%.bank}
+					message "{@E-Logo}&aYou deposited %arg 3% {@Money} into the Kingdom's bank!"
+			if "{@Eco-Mode}" is "SkEconomy":
+				if arg 3 is greater than {skeconomy.%player%.money.total}:
+					message "{@E-Logo}&cYou don't have that much money!"
+					stop trigger
+				else:
+					subtract arg 3 from {skeconomy.%player%.money.total}
+					add arg 3 to {king.k.%{king.k.%player%.Kingdom}%.bank}
+					message "{@E-Logo}&aYou deposited %arg 3% {@Money} into the Kingdom's bank!"
+		if arg 1 is "withdraw":
+			if arg 3 is less than 0:
+				message "{@E-Logo}&cYou can't use a negitive number!"
+				stop trigger
+			if {king.k.%player%.Kingdom} is "None":
+				message "{@E-Logo}&cYou don't have a Kingdom!"
+				stop trigger
+			if "{@Eco-Mode}" is not "Vault" nor "SkEconomy":
+				message "{@E-Logo}&cThere is no Kingdom bank in power mode!"
+				stop trigger
+			if {king.k.%player%.rank} is not "King" or "Knight":
+				message "{@E-Logo}&cYou are not a high enough rank to withdraw from the Kingdom bank!"
+				stop trigger
+			if arg 3 is greater than {king.k.%{king.k.%player%.Kingdom}%.bank}:
+				message "{@E-Logo}&cThe bank doesn't have that much money!"
+				stop trigger
+			else:
+				subtract arg 3 from {king.k.%{king.k.%player%.Kingdom}%.bank}
+				if "{@Eco-Mode}" is "Vault":
+					add arg 3 to player's money
+					message "{@E-Logo}&aYou withdrew %arg 3% {@Money} from the Kingdom's bank!"
+				if "{@Eco-Mode}" is "SkEconomy":
+					add arg 3 to {skeconomy.%player%.money.total}
+					message "{@E-Logo}&aYou withdrew %arg 3% {@Money} from the Kingdom's bank!"
+
+		if player doesn't have permission "sk.Kingdoms.admin":
+			stop trigger
+
+		if arg 1 is "calcpower":
+			set {king.k.%{king.k.%arg player%.Kingdom}%.power} to 0
+			loop {king.k.%{king.k.%arg player%.Kingdom}%.members::*}:
+				add {king.k.%loop-value%.power} to {king.k.%{king.k.%arg player%.Kingdom}%.power}
+		if arg 1 is "setpower":
+			if "{@Eco-Mode}" is "Vault" or "SkEconomy":
+				message "{@E-Logo}&cPower mode is not enabled!"
+				stop trigger
+			set {king.k.%arg player%.power} to integer arg
+			if {king.k.%arg player%.power} is greater than {@Max-Power}:
+				set {king.k.%arg player%.power} to {@Max-Power}
+			message "{@E-Logo}&3%arg player%&3's&a power has been set to &d%{king.k.%arg player%.power}%"
+
+command /Kingdomsadmin <text> [<text="%player's world%">] [<integer=0>]:
+	permission: sk.Kingdoms.admin
+	description: Base admin command for Kingdoms
+	aliases: /ka, /kadmin,
+	trigger:
+		if arg 1 is not {@Valid-Commands-A}:
+			message "{@E-Logo}&cThat is not a valid command!"
+			stop trigger
+		if arg 1 is "help" or "h":
+			set {_page} to arg 2
+			if arg 2 is not "1" or "2":
+				if "%arg 2%" is "%player's world%":
+					set {_page} to "1"
+				else:
+					message "{@E-Logo}&cThat is not a valid help number!"
+					stop trigger
+			else:
+				set {_page} to arg 2
+			set {_max} to 2
+			message "&8[************[&3<i>Admin Help (%{_page}%/%{_max}%)<r>&8]************]"
+			if {_page} is "1":
+				message "&a/ka reload&7 - Executes the reload command for this script."
+				message "&a/ka enableworld <world>&7 - Allows Kingdoms to work in that world."
+				message "&a/ka disableworld <world>&7 - Diables Kingdoms in that world."
+				message "&a/ka unclaim&7 - Unclaims any chunk."
+				message "&a/ka claim <Kingdom>&7 - Claims the land for the specified Kingdom."
+				message "&a/ka claim safezone&7 - Makes the land a safezone!"
+				message "&a/ka disband <Kingdom>&7 - Disbands the specified Kingdom."
+				message "&a/ka setpower <player> <amount>&7 - Change the power of a player."
+			if {_page} is "2":
+				message "&a/ka info <Kingdom>&7 - Shows detailed info on a specific Kingdom."
+				message "&a/ka bypass <on|off|toggle>&7 - Turns on/off the admin bypass mode."
+		if arg 1 is "reload":#No idea if this will mess things up or not
+			message "{@E-Logo}Reloading Kingdoms!"
+			execute op command "/skript reload Kingdoms"
+			message "{@E-Logo}Reloaded Kingdoms!"
+			stop trigger
+		if arg 1 is "clear":
+			loop {king.k.Kingdomlist::*}:
+				delete {king.k.%loop-value%.landcount}
+				delete {king.k.%loop-value%.King}
+				delete {king.k.%loop-value%.desc}
+			delete {king.k.Kingdomlist::*}
+			message "{@E-Logo}&aAll cities cleared!"
+		if arg 1 is "enableworld" or "enablew" or "wenable" or "worldenable" or "we":
+			set {king.k.worlds::%player's world%} to true
+			message "{@E-Logo}&aThe world &3%player's world%&a has been &eenabled&a for Kingdoms!"
+		if arg 1 is "disableworld" or "disablew" or "wdisable" or "worlddisable" or "wd":
+			set {king.k.worlds::%player's world%} to false
+			message "{@E-Logo}&aThe world &3%player's world%&a has been &cdisabled&a for Kingdoms"
+		if arg 1 is "unclaim":
+			if {king.k.land::%chunk at player%} is not set:
+				message "{@E-Logo}&cThis land is not claimed!"
+				stop trigger
+			delete {king.k.land::%chunk at player%}
+			message "{@E-Logo}&aThis chunk has been unclaimed by admin powers"
+		if arg 1 is "claim":
+			if arg 2 is "Safezone" or "SafeZone" or "safezone":
+				set {king.k.land::%chunk at player%} to "Safezone"
+				message "{@E-Logo}&eThis land has become a Safezone!"
+				stop trigger
+			if arg 2 is {@Illegal-Names}:
+				set {king.k.land::%chunk at player%} to "%arg 2%"
+				message "{@E-Logo}&eThis land has been set to neutral &6%arg 2%"
+				stop trigger
+			loop {king.k.Kingdomlist::*}:
+				if loop-value is arg 2:
+					if {king.k.land::%chunk at player%} is set:
+						message "{@E-Logo}&cThis chunk is already claimed"
+						stop trigger
+					set {king.k.land::%chunk at player%} to arg 2
+					message "{@E-Logo}&aThis chunk has been claimed for the &3%arg 2%&a Kingdom!"
+					stop trigger
+			message "{@E-Logo}&c'&3%arg 2%&c' is not a recognized Kingdom name!"
+		if arg 1 is "disband":
+			loop {king.k.Kingdomlist::*}:
+				if loop-value is arg 2:
+					set {_Kingdom} to loop-value
+					delete {king.k.Kingdomlist::%loop-index%}
+					exit loop
+			if {_Kingdom} is not set:
+				message "{@E-Logo}&cThat Kingdom does not exist!"
+				stop trigger
+			else:
+				loop {king.k.%{_Kingdom}%.members::*}:
+					loop-value is online:
+						send "{@E-Logo}&cYour Kingdom has been disbanded!" to loop-value
+					set {king.k.%loop-value%.Kingdom} to "None"
+					set {king.k.%loop-value%.rank} to "None"
+					delete {king.k.%{_Kingdom}%.members::%loop-index%}
+					if {king.k.%loop-value%.invited} is {_Kingdom}:
+						delete {king.k.%loop-value%.invited}
+				delete {king.k.%{_Kingdom}%.members::*}
+				delete {king.k.%{_Kingdom}%.King}
+				delete {king.k.%{_Kingdom}%.desc}
+				delete {king.k.%{_Kingdom}%.landcount}
+				delete {king.k.%{_Kingdom}%.bank}
+				loop {king.k.land::*}:
+					if "%loop-value%" is "%{_Kingdom}%":
+						delete {king.k.land::%loop-index%}
+				message "{@E-Logo}&aThe Kingdom &3%{_Kingdom}%&a has been successfully disbanded!"
+		if arg 1 is "test":
+			message "This is reserved for me to test stuff. You don't really need it at all for public use"
+		if arg 1 is "setpower":
+			make player execute command "/Kingdomsworkaround setpower %arg 2% %arg 3%"
+		if arg 1 is "info":
+			loop {king.k.Kingdomlist::*}:
+				if loop-value is arg 2:
+					set {_Kingdom} to loop-value
+			if {_Kingdom} is not set:
+				message "{@E-Logo}&cThat is not a valid Kingdom!"
+				stop trigger
+			message "{@E-Logo}&bKingdom Info: &2%{_Kingdom}%:"
+			message "&9Leader: &6%{king.k.%{_Kingdom}%.King}%"
+			set {_mem} to ""
+			set {_comma} to ""
+			loop {king.k.%{_Kingdom}%.members::*}:
+				if {king.k.%loop-value%.rank} is "King":
+					set {_mem} to "%{_mem}%%{_comma}%&6%loop-value%"
+				if {king.k.%loop-value%.rank} is "Knight":
+					set {_mem} to "%{_mem}%%{_comma}%&b%loop-value%"
+				if {king.k.%loop-value%.rank} is "Citizen":
+					set {_mem} to "%{_mem}%%{_comma}%&a%loop-value%"
+				set {_comma} to ", "
+			message "&9Members: %coloured {_mem}%"
+			message "&9Description: &a%{king.k.%{_Kingdom}%.desc}%"
+			message "&9Total Claimed Land: &6%{king.k.%{_Kingdom}%.landcount}%"
+			if "{@Eco-Mode}" is "Vault" or "SkEconomy":
+				message "&9Bank: &6%{king.k.%{_Kingdom}%.bank}%"
+			else:
+				loop {king.k.%{_Kingdom}%.members::*}:
+					add {king.k.%loop-value%.power} to {_total.power}
+				set {_max} to {@Max-Power} * size of {king.k.%{_Kingdom}%.members::*}
+				message "&9Total Power: &d%{_total.power}%/%{_max}%"
+		if arg 1 is "bypass":
+			if arg 2 is not "on", "off" or "toggle":
+				message "{@E-Logo}&c""%arg 2%"" is not a valid bypass mode. Please use 'on' 'off' or 'toggle'"
+				stop trigger
+			if arg 2 is "on":
+				set {king.k.%player%.bypass} to true
+				message "{@E-Logo}&aYou have now entered admin bypass mode!"
+			else if arg 2 is "off":
+				delete {king.k.%player%.bypass}
+				message "{@E-Logo}&aYou have now left admin bypass mode."
+			else if arg 2 is "toggle":
+				if {king.k.%player%.bypass} is not set:
+					set {king.k.%player%.bypass} to true
+					message "{@E-Logo}&aYou have now entered admin bypass mode!"
+				else:
+					delete {king.k.%player%.bypass}
+					message "{@E-Logo}&aYou have now left admin bypass mode."
+
+
+on script load:
+	if "{@Eco-Mode}" is not "Power", "Vault" or "SkEconomy":
+		send "{@E-Logo}&cThe setting &eEco-Mode&c does not have a vaild value! Using default &bPower&c mode." to console
+	if "{@Homes-Enabled}" is not "True", "true", "False", "false", "On", "on", "Off" or "off":
+		send "{@E-Logo}&cThe setting &eHomes-Enabled&c does not have a valid value! Using default &bFalse" to console
+	if "{@Homes-Spawn}" is not "True", "true", "False", "false", "On", "on", "Off" or "off":
+		send "{@E-Logo}&cThe setting &eHomes-Spawn&c does not have a valid value! Using default &bTrue" to console
+	if "{@Chat-Enabled}" is not "True", "true", "False", "false", "On", "on", "Off" or "off":
+		send "{@E-Logo}&cThe setting &eChat-Enabled&c does not have a valid value! Using default &bTrue" to console
+	if "{@Fire-Spread}" is not "True", "true", "False", "false", "On", "on", "Off" or "off":
+		send "{@E-Logo}&cThe setting &eFire-Spread&c does not have a valid value! Using default &bTrue" to console
+	if "{@Explosions}" is not "True", "true", "False", "false", "On", "on", "Off" or "off":
+		send "{@E-Logo}&cThe setting &eExplosions&c does not have a valid value! Using default &bTrue" to console
+	if "{@Open}" is not "True", "true", "False", "false", "On", "on", "Off" or "off":
+		send "{@E-Logo}&cThe setting &eOpen&c does not have a valid value! Using default &bFalse" to console
+	if "{@Friendly-Fire}" is not "True", "true", "False", "false", "On", "on", "Off" or "off":
+		send "{@E-Logo}&cThe setting &eFriendly-Fire&c does not have a valid value! Using default &bFalse" to console
+	if "{@Contiguous}" is not "True", "true", "False", "false", "On", "on", "Off" or "off":
+		send "{@E-Logo}&cThe setting &eContiguous&c does not have a valid value! Using default &bTrue" to console
+
+on break:
+	if {king.k.worlds::%player's world%} is false:
+		stop trigger
+	if {king.k.%player%.bypass} is true:
+		stop trigger
+	if {king.k.land::%chunk at event-block%} is not set:
+		stop trigger
+	if {king.k.land::%chunk at event-block%} is {king.k.%player%.Kingdom}:
+		stop trigger
+	else:
+		if event-block is {@Can-Break}:
+			stop trigger
+		message "{@E-Logo}<red>You can't do that!"
+		damage player by {@Pain-Build}
+		cancel event
+
+on place:
+	if {king.k.worlds::%player's world%} is false:
+		stop trigger
+	if {king.k.%player%.bypass} is true:
+		stop trigger
+	if {king.k.land::%chunk at event-block%} is not set:
+		stop trigger
+	if {king.k.land::%chunk at event-block%} is {king.k.%player%.Kingdom}:
+		stop trigger
+	else:
+		if event-block is {@Can-Place}:
+			stop trigger
+		message "{@E-Logo}<red>You can't do that!"
+		damage player by {@Pain-Build}
+		cancel event
+
+on rightclick:
+	if {king.k.worlds::%player's world%} is false:
+		stop trigger
+	if {king.k.%player%.bypass} is true:
+		stop trigger
+	if {king.k.land::%chunk at event-block%} is not set:
+		stop trigger
+	if {king.k.land::%chunk at event-block%} is {king.k.%player%.Kingdom}:
+		stop trigger
+	if player's tool is flint and steel:
+		cancel event
+	if block is {@Protected}:
+		message "{@E-Logo}<red>You can't do that!"
+		damage player by {@Pain-Build}
+		cancel event
+
+on burn:
+	if "{@Fire-Spread}" is "True", "true", "On" or "on":
+		stop trigger
+	if {king.k.worlds::%event-world%} is false:
+		stop trigger
+	if {king.k.land::%chunk of event-block%} is set:
+		cancel event
+
+on ignition:
+	if "{@Fire-Spread}" is "True", "true", "On" or "on":
+		stop trigger
+	if block is air:
+		stop trigger
+	if {king.k.worlds::%event-world%} is false:
+		stop trigger
+	if {king.k.land::%chunk of event-block%} is set:
+		cancel event
+
+on explosion:
+	if "{@Explosions}" is "True", "true", "On" or "on":
+		stop trigger
+	if {king.k.worlds::%event-world%} is false:
+		stop trigger
+	if {king.k.land::%chunk at event-location%} is set:
+		cancel event
+
+on death:
+	if victim is not player:
+		stop trigger
+	if {king.k.worlds::%victim's world%} is false:
+		stop trigger
+	if "{@Eco-Mode}" is not "Vault" nor "SkEconomy":
+		set {_mod} to 0
+		if {king.k.%player%.rank} is "Knight":
+			set {_mod} to {@Mod-Power}
+		if {king.k.%player%.rank} is "King":
+			set {_mod} to 2*{@Mod-Power}
+		subtract floor({_mod}+{@Loss-Power}) from {king.k.%victim%.power}
+		if {king.k.%victim%.power} is less than {@Min-Power}:
+			set {king.k.%victim%.power} to {@Min-Power}
+		message "{@E-Logo}&dYour power is now %{king.k.%victim%.power}%/{@Max-Power}" to victim
+	if "{@Eco-Mode}" is "Vault":
+		set {_money} to victim's money
+		if {_money} is less than {@Cost-per-death}:
+			set victim's money to 0
+			send "{@E-Logo}&aYou lost all your money!" to attacker
+			if attacker is player:
+				add {_money} to the attacker's money
+				send "{E-Logo}&aYou got &e%{_money}%&a for killing %victim%" to attacker
+
+on damage:
+	if {king.k.worlds::%event-world%} is false:
+		stop trigger
+	if "{@Friendly-Fire}" is not "True" nor "true" nor "on" nor "On":
+		if {king.k.%attacker%.Kingdom} is {king.k.%victim%.Kingdom}:
+			send "{@E-Logo}&4There is no friendly fire!" to attacker
+			cancel event
+			stop trigger
+		if {king.k.%{king.k.%attacker%.Kingdom}%.relations::%{king.k.%victim%.Kingdom}%} is "Ally":
+			if {king.k.%{king.k.%victim%.Kingdom}%.relations::%{king.k.%attacker%.Kingdom}%} is "Ally":
+				send "{@E-Logo}&cYou can't attack a citizen of an allied Kingdom!"
+				cancel event
+				stop trigger
+	if attacker is player:
+		if {king.k.land::%chunk of victim%} is {king.k.%victim%.Kingdom}:
+			reduce the damage by {@armour}
+
+on respawn:
+	if {king.k.worlds::%event-world%} is false:
+		stop trigger
+	if "{@Homes-Spawn}" is not "False", "false", "off" or "Off":
+		if {king.k.%player%.Kingdom} is not set:
+			stop trigger
+		if {king.k.%{king.k.%player%.Kingdom}%.home} is not set:
+			stop trigger
+		teleport player to {king.k.%{king.k.%player%.Kingdom}%.home}
+		
+
+on chat:
+	if "{@Chat-Enabled}" is "False" or "false" or "off" or "Off":
+		stop trigger
+	if {king.k.worlds::%player's world%} is false:
+		stop trigger
+	set {_prefix} to ""
+	if {king.k.%player%.rank} is "King":
+		set {_prefix} to "{@King-Prefix} "
+	if {king.k.%player%.rank} is "Knight":
+		set {_prefix} to "{@Knight-Prefix} "
+	if {king.k.%player%.rank} is "Noble":
+		set {_prefix} to "{@Noble-Prefix} "
+	if {king.k.%player%.rank} is "Upperclass":
+		set {_prefix} to "{@Upperclass-Prefix} "
+	if {king.k.%player%.rank} is "Citizen":
+		set {_prefix} to "{@Citizen-Prefix} "
+	set {_Kingdom.name} to {king.k.%player%.Kingdom}
+	if {_Kingdom.name} is "None":
+		set {_Kingdom.name} to "{@Chat-Default}"
+	loop all players:
+		if {king.k.worlds::%loop-player's world%} is false:
+			exit 1 section
+		else:
+			set {_Kingdom} to {king.k.%player%.Kingdom}
+			set {_Kingdom.other} to {king.k.%loop-player%.Kingdom}
+			set {_relation.colour} to "No change"
+			if {king.k.%{_Kingdom}%.relations::%{_Kingdom.other}%} is not set:
+				set {_relation.colour} to "{@Chat-Neutral}"
+				if {_Kingdom} is {_Kingdom.other}:
+					set {_relation.colour} to "{@Chat-Ally}"
+			if {king.k.%{_Kingdom}%.relations::%{_Kingdom.other}%} is "Enemy":
+				set {_relation.colour} to "{@Chat-Enemy}"
+			if {king.k.%{_Kingdom}%.relations::%{_Kingdom.other}%} is "Ally":
+				if {king.k.%{_Kingdom.other}%.relations::%{_Kingdom}%} is "Ally":
+					set {_relation.colour} to "{@Chat-Ally}"
+				else:
+					set {_relation.colour} to "{@Chat-Neutral}"
+			send "{@Chat-Format}: %uncoloured message%" to loop-player
+	set {_relation.colour} to ""
+	send "{@Chat-Format} %uncoloured message%" to console #So it shows up there too!
+	cancel event
+
+every {@Check-Time} ticks:
+	if "{@Eco-Mode}" is not "Vault" or "SkEconomy":
+		add 1 to {king.k.timecount}
+	loop all players:
+		{king.k.worlds::%loop-player's world%} is true
+		#Power regen
+		set {_calc.time} to 1200/{@Check-Time}
+		if {king.k.timecount} is greater than or equal to {_calc.time}:
+			set {king.k.timecount} to 0
+			if "{@Eco-Mode}" is not "Vault" nor "SkEconomy":
+				add {@Reg-Power} to {king.k.%loop-player%.power}
+				if {king.k.%loop-player%.power} is greater than {@Max-Power}:
+					set {king.k.%loop-player%.power} to {@Max-Power}
+		#End of power code
+		if {king.k.land::%chunk at loop-player%} is not set:
+			set {_Kingdom} to "None"
+		else:
+			set {_Kingdom} to {king.k.land::%chunk at loop-player%}
+		if {_Kingdom} is not {king.k.%loop-player%.lastKingdom}:
+			if {_Kingdom} is "Safezone":
+				send "&6Safezone - {@Safezone-Desc}" to loop-player
+			else if {_Kingdom} is "None" or "<none>":
+				send "&eYou have entered the Wilderness!" to loop-player
+			else if {_Kingdom} is {@Illegal-Names}:
+				send "&8%{_Kingdom}% &7- {@Mech-Desc}" to loop-player
+			if {_Kingdom} is not {@Illegal-Names}:
+				if {king.k.%{_Kingdom}%.home-chunk} is chunk at loop-player:
+					send "&e~ &bHome of %{_Kingdom}%" to loop-player
+				else:
+					send "&a%{_Kingdom}% - %{king.k.%{_Kingdom}%.desc}%" to loop-player
+			set {king.k.%loop-player%.lastKingdom} to {_Kingdom}
