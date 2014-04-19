@@ -2,6 +2,7 @@
 
 options:
 	P: &8[&aI&8]&a
+	LobbyWorld: InfectionLobby
 		
 command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 	description: Main Infection Command
@@ -10,6 +11,16 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 	trigger:
 		if arg 1 is not set:
 			message "{@P} You must give a sub-command! Do /inf help - for help."
+		else if arg 1 is "lobby":
+			player's world is not "{@LobbyWorld}":
+				if {inf.%player%.stored.invo::*} is not set:
+					loop all items in player's inventory:
+						add loop-item to {inf.%player%.stored.invo::*}
+					clear player's inventory
+					message "{@P} Your inventory has been successfully stored. To get it back to /inf leave lobby"
+				teleport player to {inf.lobby}
+			else:
+				message "{@P} You're already in the lobby!"
 		else if arg 1 is "help":
 			if arg 2 is not set:
 				execute op command "/inf-bypass help 1"
@@ -18,12 +29,18 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 			else:
 				message "{@P} Unknown page number! There is %{inf.maxhelp}% page to see"
 		else if arg 1 is "leave":
-			set {inf.%player%.playing} to "False"
-			set {_line2} to line 2 of block at {inf.%player%.signclicked}
-			subtract 1 from {inf.%{_line2}%.ingame}
-			set line 3 of block at {inf.%player%.signclicked} to "%{inf.%{_line2}%.ingame}%/%{inf.%{_line2}%.slots}%"
-			teleport player to {inf.lobby}
-			message "{@P} You left the game."
+			if {inf.%player%.playing} is "True":
+				set {inf.%player%.playing} to "False"
+				set {_line2} to line 2 of block at {inf.%player%.signclicked}
+				subtract 1 from {inf.%{_line2}%.ingame}
+				set line 3 of block at {inf.%player%.signclicked} to "%{inf.%{_line2}%.ingame}%/%{inf.%{_line2}%.slots}%"
+				teleport player to {inf.lobby}
+				message "{@P} You left the game."
+				loop all players:
+					if {inf.%loop-player%.playing.map} is {inf.%player%.playing.map}:
+						message "{@P} Player: %player% has left match."
+			else:
+				message "{@P} What have you got to leave?"
 		else if arg 1 is "me":
 			if arg 2 is not set:
 				message "{@P} Showing information for: %player%"
@@ -73,15 +90,17 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 					message "{@P} That kit doesn't exist."
 		else if arg 1 is "admin":
 			player has permission "qcz.infection.admin":
-				if arg 2 is "add":
+				if arg 2 is "add" or "set":
 					if arg 3 is not set:
 						message "{@P} What would you like to add?"
 						message "{@P} - Zombie Spawn Point - /inf admin add zombie <map>"
 						message "{@P} - Map Spawn Point - /inf admin add spawn <map>"
+						message "{@P} - Start Point - /inf admin set spoint <map>" 
 						message "{@P} - Kit - /inf admin add kit <kitname> <default perm t/f> <supporter t/f>"
 						message "{@P} - Map - /inf admin add map"
 					else if arg 3 is "lobby":
 						set {inf.lobby} to location of player
+						message "{@P} Set lobby to: %{inf.lobby}%"
 					else if arg 3 is "zombie":
 						if arg 4 is not set:
 							message "{@P} You must give a map"
@@ -212,7 +231,7 @@ on sign change:
 			message "{@P} You don't have permission to create Infection signs"
 				
 on rightclick:
-	player is in "world":
+	player's world is "{@LobbyWorld}":
 		if block is sign:
 			line 1 of block is "&a[INFECTION]":
 				if {inf.%player%.banned} is false:
@@ -232,6 +251,11 @@ on rightclick:
 									set line 4 of block to "&4&lIn Game"
 								set {inf.%player%.signclicked} to location of block
 								set {inf.%player%.playing} to "True"
+								set {inf.%player%.playing.map} to line 2 of block
+								wait 1 second
+								loop all players:
+									if {inf.%loop-player%.playing.map} is {inf.%player%.playing.map}:
+										send "{@P} Player: %player% has joined the game!" to loop-player
 							else:
 								message "{@P} This game is full"
 					else:
@@ -249,17 +273,36 @@ on rightclick:
 		message "{@P} Added Zombie Spawner at: %{_bloclloc}% for %{inf.%player%.rightclick.mapname}%"
 		delete {inf.%player%.rightclick}
 		set block to gray wool
-	if {inf.%player%.rightclick} is "addspawn":
+		cancel event
+	else if {inf.%player%.rightclick} is "addspawn":
+		set block at {inf.%{inf.%player%.rightclick.mapname}%.blockloc} to {inf.%{inf.%player%.rightclick.mapname}%.block}
 		set {_bloclloc} to location of block
 		set {_x} to x coordinate of {_bloclloc}
 		set {_y} to y coordinate of {_bloclloc}
 		set {_z} to z coordinate of {_bloclloc}
 		add 1 to {_y}
 		set {inf.map.%{inf.%player%.rightclick.mapname}%.spawn} to location at {_x}, {_y}, {_z}
+		add {inf.map.%{inf.%player%.rightclick.mapname}%.spawn} to {inf.%{inf.%player%.rightclick.mapname}%.zombiespawners::*}
 		message "{@P} Set location at: %{inf.map.%{inf.%player%.rightclick.mapname}%.spawn}% for %{inf.%player%.rightclick.mapname}%"
 		delete {inf.%player%.rightclick}
+		set {inf.%location of block%.block} to block
+		set {inf.%{inf.%player%.rightclick.mapname}%.blockloc} to location of block
+		set {inf.%{inf.%player%.rightclick.mapname}%.block} to block
 		set block to gold block
-		
+		cancel event
+	else if {inf.%player%.rightclick} is "removezombie":
+		set {_bloclloc} to location of block
+		set {_x} to x coordinate of {_bloclloc}
+		set {_y} to y coordinate of {_bloclloc}
+		set {_z} to z coordinate of {_bloclloc}
+		add 1 to {_y}
+		set {inf.map.%{inf.%player%.rightclick.mapname}%.spawn} to location at {_x}, {_y}, {_z}
+		add {inf.map.%{inf.%player%.rightclick.mapname}%.spawn} to {inf.%{inf.%player%.rightclick.mapname}%.zombiespawners::*}
+		message "{@P} Set location at: %{inf.map.%{inf.%player%.rightclick.mapname}%.spawn}% for %{inf.%player%.rightclick.mapname}%"
+		delete {inf.%player%.rightclick}
+		set block to {inf.%location of block%.block}
+		cancel event
+			
 on drop:
 	{inf.%player%.playing} is "True":
 		cancel event
