@@ -17,6 +17,13 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 				execute op command "/inf-bypass help 1"
 			else:
 				message "{@P} Unknown page number! There is %{inf.maxhelp}% page to see"
+		else if arg 1 is "leave":
+			set {inf.%player%.playing} to "False"
+			set {_line2} to line 2 of block at {inf.%player%.signclicked}
+			subtract 1 from {inf.%{_line2}%.ingame}
+			set line 3 of block at {inf.%player%.signclicked} to "%{inf.%{_line2}%.ingame}%/%{inf.%{_line2}%.slots}%"
+			teleport player to {inf.lobby}
+			message "{@P} You left the game."
 		else if arg 1 is "me":
 			if arg 2 is not set:
 				message "{@P} Showing information for: %player%"
@@ -69,14 +76,19 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 				if arg 2 is "add":
 					if arg 3 is not set:
 						message "{@P} What would you like to add?"
-						message "{@P} - Zombie Spawn Point - /inf admin add zombie"
+						message "{@P} - Zombie Spawn Point - /inf admin add zombie <map>"
 						message "{@P} - Map Spawn Point - /inf admin add spawn <map>"
 						message "{@P} - Kit - /inf admin add kit <kitname> <default perm t/f> <supporter t/f>"
 						message "{@P} - Map - /inf admin add map"
+					else if arg 3 is "lobby":
+						set {inf.lobby} to location of player
 					else if arg 3 is "zombie":
-						message "{@P} To add a Zombie Spawner location please right click."
-						message "{@P} To cancel the right click do /inf cancel"
-						set {inf.%player%.rightclick} to "addzombie"
+						if arg 4 is not set:
+							message "{@P} You must give a map"
+						else:
+							message "{@P} To add a Zombie Spawner location please right click."
+							message "{@P} To cancel the right click do /inf cancel"
+							set {inf.%player%.rightclick} to "addzombie"
 					else if arg 3 is "spawn":
 						if arg 4 is not set:
 							message "{@P} You must give a map name!"
@@ -209,21 +221,34 @@ on rightclick:
 							message "{@P} Couldn't find spawn location for: %line 2 of block%&a. Please inform an admin"
 						else:
 							set {_players::*} to line 3 of block split at "/"
-							set {_slots} to {_players::2} parsed as number
-							set {_ingame} to {_players::1} parsed as number
-							if {_ingame} is less than {_slots}:
+							set {inf.%line 2 of block%.slots} to {_players::2} parsed as number
+							set {inf.%line 2 of block%.ingame} to {_players::1} parsed as number
+							if {inf.%line 2 of block%.ingame} is less than {inf.%line 2 of block%.slots}:
 								teleport player to {inf.map.%line 2 of block%.spawn}
 								message "{@P} You joined: %line 2 of block%"
-								add 1 to {_ingame}
-								set line 3 of block to "%{_ingame}%/%{_slots}%"
-								if {_ingame} is equal to {_slots}:
-									set line 4 of block to "&4&lClosed"
+								add 1 to {inf.%line 2 of block%.ingame}
+								set line 3 of block to "%{inf.%line 2 of block%.ingame}%/%{inf.%line 2 of block%.slots}%"
+								if {inf.%line 2 of block%.ingame} is equal to {inf.%line 2 of block%.slots}:
+									set line 4 of block to "&4&lIn Game"
+								set {inf.%player%.signclicked} to location of block
+								set {inf.%player%.playing} to "True"
 							else:
 								message "{@P} This game is full"
 					else:
 						message "{@P} This game is full"
 				else:
 					message "{@P} You're banned from Infection. By: %{inf.%player%.bannedby}%. For: %{inf.%player%.banreason}%"
+	if {inf.%player%.rightclick} is "addzombie":
+		set {_bloclloc} to location of block
+		set {_x} to x coordinate of {_bloclloc}
+		set {_y} to y coordinate of {_bloclloc}
+		set {_z} to z coordinate of {_bloclloc}
+		add 1 to {_y}
+		set {_bloclloc} to location at {_x}, {_y}, {_z}
+		add {_bloclloc} to {inf.%{inf.%player%.rightclick.mapname}%.zombiespawners::*}
+		message "{@P} Added Zombie Spawner at: %{_bloclloc}% for %{inf.%player%.rightclick.mapname}%"
+		delete {inf.%player%.rightclick}
+		set block to gray wool
 	if {inf.%player%.rightclick} is "addspawn":
 		set {_bloclloc} to location of block
 		set {_x} to x coordinate of {_bloclloc}
@@ -234,16 +259,21 @@ on rightclick:
 		message "{@P} Set location at: %{inf.map.%{inf.%player%.rightclick.mapname}%.spawn}% for %{inf.%player%.rightclick.mapname}%"
 		delete {inf.%player%.rightclick}
 		set block to gold block
+		
+on drop:
+	{inf.%player%.playing} is "True":
+		cancel event
+		message "{@P} You can't drop items while playing."
 
 on command:
-	if {inf.%player%.playing} is true:
+	if {inf.%player%.playing} is "True":
 		if "%command%" is "inf":
-			if "%arguments%" is "leave":
-				message "hi"
-			else:
+			if "%arguments%" is not "leave":
 				message "{@P} You can't do that command in game!"
+				cancel event
 		else:
 			message "{@P} You can't do that command in game!"
+			cancel event
 				
 command /inf-bypass [<text>] [<text>]:
 	description: Used to shorten code from main command
