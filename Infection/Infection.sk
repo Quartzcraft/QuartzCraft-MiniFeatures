@@ -3,7 +3,12 @@
 options:
 	P: &8[&aI&8]&a
 	LobbyWorld: InfectionLobby
-		
+	
+on join:
+	if {inf.%player%.started} is not set:
+		#set {inf.%player%.started} to true ====== RENABLE ON RELEASE!
+		set {inf.%player%.banned} to false
+	
 command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 	description: Main Infection Command
 	permission: qcz.infection.usage
@@ -39,6 +44,7 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 				loop all players:
 					if {inf.%loop-player%.playing.map} is {inf.%player%.playing.map}:
 						message "{@P} Player: %player% has left match."
+				clear the player's inventory
 			else:
 				message "{@P} What have you got to leave?"
 		else if arg 1 is "me":
@@ -88,7 +94,7 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 						message "{@P} You don't have permission for that kit!"
 				else:
 					message "{@P} That kit doesn't exist."
-		else if arg 1 is "admin":
+		else if arg 1 is "admin" or "a":
 			player has permission "qcz.infection.admin":
 				if arg 2 is "add" or "set":
 					if arg 3 is not set:
@@ -199,8 +205,64 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 								if "%loop-value%" is "%arg 4%":
 									remove loop-value from {inf.kit.list::*}
 							message "{@P} Removed kit: %arg 4%"
+				else if arg 2 is "close":
+					if targeted block is sign:
+						line 1 of targeted block is "&a[INFECTION]":
+							if line 4 of targeted block is "&4&lClosed":
+								message "{@P} This map is already closed"
+							else if line 4 of targeted block is "&4&lIn Game":
+								loop all players:
+									if {inf.%loop-player%.playing.map} is line 2 of targeted block:
+										make loop-player execute command "/inf leave"
+										send "{@P} This map has been closed! Sorry about this." to loop-player
+										set line 4 of targeted block to "&4&lClosed"
+										message "{@P} You closed map: %line 2 of targeted block%"
+										broadcast "{@P} Map: %line 2 of targeted block% is now closed."
+							else if line 4 of targeted block is "&5&lWaiting":
+								set line 4 of targeted block to "&4&lClosed"
+								message "{@P} You closed map: %line 2 of targeted block%"
+								broadcast "{@P} Map: %line 2 of targeted block% is now closed."
+						else:
+							message "{@P} That isn't an infection sign"
+					else:
+						message "{@P} That isn't a sign!"
+				else if arg 2 is "open":
+					if targeted block is sign:
+						line 1 of targeted block is "&a[INFECTION]":
+							if line 4 of targeted block is "&4&lClosed":
+								set line 4 of targeted block to "&5&lWaiting"
+								broadcast "{@P} Map: %line 2 of targeted block% is now open."
+								message "{@P} You opened map: %line 2 of targeted block%"
+				else if arg 2 is "ban":
+					make player execute command "/inf m ban %player% %arg 4% %arg 5% %arg 6%"
+				else if arg 2 is "unban":
+					make player execute command "/inf m unban %player%"
 				else:
 					message "{@P} Please enter an admin sub-command"
+		else if arg 1 is "mod" or "moderator" or "m":
+			if player has permission "qcz.infection.moderator" or "qcz.infection.admin":
+				if arg 2 is not set:
+					message "{@P} You must give a moderator sub-command!"
+				else if arg 2 is "ban":
+					if arg 3 is not set:
+						message "{@P} You must give a name of a player to ban!"
+					else if arg 4 is not set:
+						message "{@P} You must give a reason to ban that player!"
+					else:
+						set {inf.%arg 3%.banned} to true
+						set {inf.%arg 3%.banreason} to "%arg 4% %arg 5% %arg 6%"
+						set {inf.%arg 3%.bannedby} to player
+						message "{@P} Banned: %arg 3% for: %{inf.%arg 3%.banreason}%"
+						broadcast "{@P} Player: %arg 3% was banned from Infection by: %player% for: %{inf.%arg 3%.banreason}%"
+				else if arg 2 is "unban":
+					if arg 3 is not set:
+						message "{@P} You need a playername to unban!"
+					else:
+						set {inf.%arg 3%.banned} to false
+						delete {inf.%arg 3%.banreason}
+						delete {inf.%arg 3%.bannedby}
+						message "{@P} You unbanned: %arg 3%"
+						
 		else:
 			message "{@P} Unknown command!"
 
@@ -224,7 +286,7 @@ on sign change:
 				set line 1 of block to "&a[INFECTION]"
 				set line 2 of block to "%{_line2}%"
 				set line 3 of block to "0/10"
-				set line 4 of block to "&a&lOpen"
+				set line 4 of block to "&5&lWaiting"
 			else:
 				message "{@P} There was an error"
 		else:
@@ -235,7 +297,7 @@ on rightclick:
 		if block is sign:
 			line 1 of block is "&a[INFECTION]":
 				if {inf.%player%.banned} is false:
-					line 4 of block is "&a&lOpen":
+					if line 4 of block is "&5&lWaiting":
 						if {inf.map.%line 2 of block%.spawn} is not set:
 							message "{@P} Couldn't find spawn location for: %line 2 of block%&a. Please inform an admin"
 						else:
@@ -258,8 +320,12 @@ on rightclick:
 										send "{@P} Player: %player% has joined the game!" to loop-player
 							else:
 								message "{@P} This game is full"
+					else if line 4 of block is "&4&lClosed":
+						message "{@P} Sorry! This game is closed"
+					else if line 4 of block is "&4&lIn Game":
+						message "{@P} This game has started already!"
 					else:
-						message "{@P} This game is full"
+						message "{@P} Unknown game status! Failed to join"
 				else:
 					message "{@P} You're banned from Infection. By: %{inf.%player%.bannedby}%. For: %{inf.%player%.banreason}%"
 	if {inf.%player%.rightclick} is "addzombie":
@@ -330,4 +396,4 @@ command /inf-bypass [<text>] [<text>]:
 				message "{@P} /inf leave - Leave the game"
 				message "{@P} /inf stats - Stats about you!"
 				message "{@P} /inf kit <kit> - Choose a kit"
-				
+				message "{@P} /inf leave lobby - Leave the lobby"
