@@ -303,6 +303,41 @@ on sign change:
 				message "{@P} There was an error"
 		else:
 			message "{@P} You don't have permission to create Infection signs"
+			
+on hunger meter change:
+	if player's world is "{@LobbyWorld}":
+		cancel event
+	else if {inf.%player%.playing} is "True":
+		cancel event
+		
+on item spawn:
+	world is "{@LobbyWorld}":
+		player has permission "qcz.infecion.drop.lobby":
+			message "p"
+			stop
+		else:
+			cancel event
+			message "{@P} Dropping items isn't allowed here!"
+	else if "{inf.map.%world%.name}" is set:
+		player has permission "qcz.infecion.drop.maps":
+			stop
+		else:
+			cancel event
+			message "{@P} Dropping items isn't allowed here!"
+		
+on place:
+	if player's world is "{@LobbyWorld}":
+		player has permission "qcz.infecion.build.lobby":
+			stop
+		else:
+			cancel event
+			message "{@P} You don't have permission to build here"
+	else if {inf.map.%player's world%.name} is set:
+		player has permission "qcz.infecion.build.maps":
+			stop
+		else:
+			cancel event
+			message "{@P} You don't have permission to build here"
 				
 on rightclick:
 	player's world is "{@LobbyWorld}":
@@ -336,6 +371,8 @@ on rightclick:
 						message "{@P} Sorry! This game is closed"
 					else if line 4 of block is "&4&lIn Game":
 						message "{@P} This game has started already!"
+					else if line 4 of block is "&4&lReloading...":
+						message "{@P} This game is reloading! Please wait."
 					else:
 						message "{@P} Unknown game status! Failed to join"
 				else:
