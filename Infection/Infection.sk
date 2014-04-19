@@ -57,6 +57,12 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 				message "{@P} Playing: %{inf.%player%.playing}%"
 				if {inf.%player%.playing} is "True":
 					message "{@P} In Map: %{inf.%player%.playing.map}%"
+				if {inf.%player%.banned} is true:
+					message "{@P} Banned: True"
+					message "{@P} Reason: %{inf.%player%.banreason}%"
+					message "{@P} Banned By: %{inf.%player%.bannedby}%"
+				else:
+					message "{@P} Banned: False"	
 			else:
 				message "{@P} Showing information for: %arg 2%"
 				if {inf.%arg 2%.kit} is not set:
@@ -70,6 +76,12 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
 						message "{@P} In Map: %{inf.%arg 2%.playing.map}%"
 				else:
 					message "{@P} Playing: False"
+				if {inf.%arg 2%.banned} is true:
+					message "{@P} Banned: True"
+					message "{@P} Reason: %{inf.%arg 2%.banreason}%"
+					message "{@P} Banned By: %{inf.%arg 2%.bannedby}%"
+				else:
+					message "{@P} Banned: False"	
 		else if arg 1 is "kit":
 			if arg 2 is not set:
 				message "{@P} Kit List:"
