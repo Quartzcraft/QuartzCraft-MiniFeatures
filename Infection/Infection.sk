@@ -1,0 +1,260 @@
+#Infection
+
+options:
+	P: &8[&aI&8]&a
+		
+command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>] :
+	description: Main Infection Command
+	permission: qcz.infection.usage
+	aliases: /infect, /inf,
+	trigger:
+		if arg 1 is not set:
+			message "{@P} You must give a sub-command! Do /inf help - for help."
+		else if arg 1 is "help":
+			if arg 2 is not set:
+				execute op command "/inf-bypass help 1"
+			else if arg 2 is "1":
+				execute op command "/inf-bypass help 1"
+			else:
+				message "{@P} Unknown page number! There is %{inf.maxhelp}% page to see"
+		else if arg 1 is "me":
+			if arg 2 is not set:
+				message "{@P} Showing information for: %player%"
+				if {inf.%player%.kit} is not set:
+					message "{@P} Kit: Hasn't selected one"
+				else:
+					message "{@P} Kit: %{inf.%player%.kit}%"
+				message "{@P} Playing: %{inf.%player%.playing}%"
+				if {inf.%player%.playing} is "True":
+					message "{@P} In Map: %{inf.%player%.playing.map}%"
+			else:
+				message "{@P} Showing information for: %arg 2%"
+				if {inf.%arg 2%.kit} is not set:
+					message "{@P} Kit: Hasn't selected one"
+				else:
+					message "{@P} Kit: %{inf.%arg 2%.kit}%"
+				set {_player} to arg 2 parsed as player
+				if {_player} is online:
+					message "{@P} Playing: %{inf.%arg 2%.playing}%"
+					if {inf.%arg 2%.playing} is "True":
+						message "{@P} In Map: %{inf.%arg 2%.playing.map}%"
+				else:
+					message "{@P} Playing: False"
+		else if arg 1 is "kit":
+			if arg 2 is not set:
+				message "{@P} Kit List:"
+				loop {inf.kit.list::*}:
+					if {inf.kit.%loop-value%.supporter} is "True":
+						message "{@P} %loop-value% - &cSupporter Kit"
+					else:
+						message "{@P} %loop-value% - &2Player Kit"
+			else:
+				if {inf.kit.%arg 2%.name} is set:
+					if player has permission "%{inf.kit.%arg 2%.permission}%":
+						if {inf.kit.%arg 2%.supporter} is "True":
+							if player has permission "qcz.supporter":
+								set {inf.%player%.kit} to "%arg 2%"
+								message "{@P} Your kit is now: %arg 2%"
+							else:
+								message "{@P} That is a supporter kit!"
+						else:
+							set {inf.%player%.kit} to "%arg 2%"
+							message "{@P} Your kit is now: %arg 2%"
+					else:
+						message "{@P} You don't have permission for that kit!"
+				else:
+					message "{@P} That kit doesn't exist."
+		else if arg 1 is "admin":
+			player has permission "qcz.infection.admin":
+				if arg 2 is "add":
+					if arg 3 is not set:
+						message "{@P} What would you like to add?"
+						message "{@P} - Zombie Spawn Point - /inf admin add zombie"
+						message "{@P} - Map Spawn Point - /inf admin add spawn <map>"
+						message "{@P} - Kit - /inf admin add kit <kitname> <default perm t/f> <supporter t/f>"
+						message "{@P} - Map - /inf admin add map"
+					else if arg 3 is "zombie":
+						message "{@P} To add a Zombie Spawner location please right click."
+						message "{@P} To cancel the right click do /inf cancel"
+						set {inf.%player%.rightclick} to "addzombie"
+					else if arg 3 is "spawn":
+						if arg 4 is not set:
+							message "{@P} You must give a map name!"
+						else:
+							message "{@P} To add a Map Spawn please right click."
+							message "{@P} To cancel the right click do /inf cancel"
+							set {inf.%player%.rightclick} to "addspawn"
+							set {inf.%player%.rightclick.mapname} to arg 4
+					else if arg 3 is "kit":
+						if arg 4 is not set:
+							message "{@P} You must give a name!"
+						else:
+							if arg 5 is not set:
+								message "{@P} Do you want the default perm?!"
+							else if arg 5 is "t" or "f":
+								if arg 6 is not set:
+									message "{@P} Is it a supporter kit?"
+								else if arg 6 is "t":
+									if {inf.kit.list::*} contains "%arg 4%":
+										remove "%arg 4%" from {inf.kit.list::*}
+										add "%arg 4%" to {inf.kit.list::*}
+									else:
+										add arg 4 to {inf.kit.list::*}
+									set {inf.kit.%arg 4%.name} to arg 4
+									set {inf.kit.%arg 4%.supporter} to "True"
+									if arg 5 is "f":
+										set {inf.kit.%arg 4%.permission} to "qcz.infecion.kit"
+									else:
+										set {inf.kit.%arg 4%.permission} to "qcz.infecion.%arg 4%"
+									clear {inf.kit.%arg 4%.items::*}
+									loop all items in player's inventory:
+										add loop-item to {inf.kit.%arg 4%.items::*}
+									message "{@P} Created Kit: %{inf.kit.%arg 4%.name}%"
+									message "{@P} Supporter: %{inf.kit.%arg 4%.supporter}%"
+									message "{@P} Permission: %{inf.kit.%arg 4%.permission}%"
+								else if arg 6 is "f":
+									add arg 4 to {inf.kit.list::*}
+									set {inf.kit.%arg 4%.name} to arg 4
+									set {inf.kit.%arg 4%.supporter} to "False"
+									if arg 5 is "f":
+										set {inf.kit.%arg 4%.permission} to "qcz.infecion.kit"
+									else:
+										set {inf.kit.%arg 4%.permission} to "qcz.infecion.%arg 4%"
+									clear {inf.kit.%arg 4%.items::*}
+									loop all items in player's inventory:
+										add loop-item to {inf.kit.%arg 4%.items::*}
+									message "{@P} Created Kit: %{inf.kit.%arg 4%.name}%"
+									message "{@P} Supporter: %{inf.kit.%arg 4%.supporter}%"
+									message "{@P} Permission: %{inf.kit.%arg 4%.permission}%"
+					else if arg 3 is "map":
+						if arg 4 is not set:
+							message "{@P} You must give a map name!"
+						else if {inf.map.%arg 4%.name} is not set:
+							set {inf.map.%arg 4%.name} to arg 4
+							add arg 4 to {inf.map.list::*}
+							message "{@P} Created Map: %{inf.map.%arg 4%.name}%"
+				else if arg 2 is "remove":
+					if arg 3 is not set:
+						message "{@P} You can remove the following:"
+						message "{@P} Zombie Spawner - /inf admin remove zombie"
+						message "{@P} Do /inf admin list zombie - for spawner locations"
+						message "{@P} Maps - /inf admin remove map"
+						message "{@P} Do /inf admin list map - for a list of maps"
+						message "{@P} Kits - /inf admin remove kit <name>"
+						message "{@P} Do /inf kit - for a list of kits"
+					if arg 3 is "zombie":
+						message "{@P} You can now remove a Zombie Spawner"
+						message "{@P} To cancel do /inf admin cancel"
+						set {inf.%player%.rightclick} to "removezombie"
+					else if arg 3 is "map":
+						if arg 4 is not set:
+							message "{@P} You must give a name of a map to remove!"
+						else if {inf.map.%arg 4%.name} is not set:
+							message "{@P} That map doesn't exist."
+						else:
+							delete {inf.map.%arg 3%.name}
+							message "{@P} Deleted: %{inf.map.%arg 3%.name}%"
+					else if arg 3 is "kit":
+						if arg 4 is not set:
+							message "{@P} You must give the kit name!"
+						else if {inf.kit.%arg 4%.name} is not set:
+							message "{@P} That kit doesn't exist!"
+						else:
+							delete {inf.kit.%arg 4%.name}
+							delete {inf.kit.%arg 4%.supporter}
+							delete {inf.kit.%arg 4%.permission}
+							delete {inf.kit.%arg 4%.items::*}
+							loop {inf.kit.list::*}:
+								if "%loop-value%" is "%arg 4%":
+									remove loop-value from {inf.kit.list::*}
+							message "{@P} Removed kit: %arg 4%"
+				else:
+					message "{@P} Please enter an admin sub-command"
+		else:
+			message "{@P} Unknown command!"
+
+on sign change:
+	set {_line1} to line 1 of block parsed as text
+	set {_line2} to line 2 of block parsed as text
+	set {_line3} to line 3 of block parsed as text
+	set {_line4} to line 4 of block parsed as text
+	if {_line1} is "inf" or "[INFECTION]":
+		player has permission "qcz.infecion.admin":
+			if {_line2} is not set:
+				message "{@P} You need to enter a map name on line 2"
+				cancel event
+				give 1 sign to player
+			else if {inf.map.%{_line2}%.name} is not set:
+				message "{@P} That map doesn't exist."
+				cancel event
+				give 1 sign to player
+			else if {inf.map.%{_line2}%.name} is set:
+				set {_line2} to {inf.map.%{_line2}%.name}
+				set line 1 of block to "&a[INFECTION]"
+				set line 2 of block to "%{_line2}%"
+				set line 3 of block to "0/10"
+				set line 4 of block to "&a&lOpen"
+			else:
+				message "{@P} There was an error"
+		else:
+			message "{@P} You don't have permission to create Infection signs"
+				
+on rightclick:
+	player is in "world":
+		if block is sign:
+			line 1 of block is "&a[INFECTION]":
+				if {inf.%player%.banned} is false:
+					line 4 of block is "&a&lOpen":
+						if {inf.map.%line 2 of block%.spawn} is not set:
+							message "{@P} Couldn't find spawn location for: %line 2 of block%&a. Please inform an admin"
+						else:
+							set {_players::*} to line 3 of block split at "/"
+							set {_slots} to {_players::2} parsed as number
+							set {_ingame} to {_players::1} parsed as number
+							if {_ingame} is less than {_slots}:
+								teleport player to {inf.map.%line 2 of block%.spawn}
+								message "{@P} You joined: %line 2 of block%"
+								add 1 to {_ingame}
+								set line 3 of block to "%{_ingame}%/%{_slots}%"
+								if {_ingame} is equal to {_slots}:
+									set line 4 of block to "&4&lClosed"
+							else:
+								message "{@P} This game is full"
+					else:
+						message "{@P} This game is full"
+				else:
+					message "{@P} You're banned from Infection. By: %{inf.%player%.bannedby}%. For: %{inf.%player%.banreason}%"
+	if {inf.%player%.rightclick} is "addspawn":
+		set {_bloclloc} to location of block
+		set {_x} to x coordinate of {_bloclloc}
+		set {_y} to y coordinate of {_bloclloc}
+		set {_z} to z coordinate of {_bloclloc}
+		add 1 to {_y}
+		set {inf.map.%{inf.%player%.rightclick.mapname}%.spawn} to location at {_x}, {_y}, {_z}
+		message "{@P} Set location at: %{inf.map.%{inf.%player%.rightclick.mapname}%.spawn}% for %{inf.%player%.rightclick.mapname}%"
+		delete {inf.%player%.rightclick}
+		set block to gold block
+
+on command:
+	if {inf.%player%.playing} is true:
+		if "%command%" is "inf":
+			if "%arguments%" is "leave":
+				message "hi"
+			else:
+				message "{@P} You can't do that command in game!"
+		else:
+			message "{@P} You can't do that command in game!"
+				
+command /inf-bypass [<text>] [<text>]:
+	description: Used to shorten code from main command
+	permission: qcz.infection.admin
+	trigger:
+		if arg 1 is "help":
+			if arg 2 is "1":
+				set {inf.maxhelp} to 1
+				message "{@P} ---------- Infection Help (%arg 2%/%{inf.maxhelp}%) ----------"
+				message "{@P} /inf lobby - Join the lobby"
+				message "{@P} /inf leave - Leave the game"
+				message "{@P} /inf stats - Stats about you!"
+				message "{@P} /inf kit <kit> - Choose a kit"
+				
