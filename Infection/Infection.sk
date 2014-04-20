@@ -1,4 +1,10 @@
 #Infection
+#=========
+#Notes:
+#/inf a set mainspawn - MUST BE DONE
+#/inf a set infkit - MUST BE DONE
+#=========
+
 
 options:
 	P: &8[&aI&8]&a
@@ -19,7 +25,6 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>]:
 	aliases: /infect, /inf,
 	trigger:
 		if arg 1 is not set:
-			execute console command "tellraw %player% {""text"":""If there are no staff online, please inform them through:             "",""color"":""green",""extra"":[{""text"":""[Our Website]"",""color"":""red"",""underlined"":""true"",""bold"":""true"",""clickEvent"":{""action"":""open_url"",""value"":""http://quartzcraft.co.uk""},""hoverEvent"":{""action"":""show_text"",""value"":""Click to go to our Website: http://QuartzCraft.co.uk""}}]}"
 			clear {inf.waiting::*}
 			message "{@P} You must give a sub-command! Do /inf help - for help."
 		else if arg 1 is "lobby":
@@ -71,9 +76,13 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>]:
 							message "{@P} Player: %player% has left match."
 					clear the player's inventory
 			else if arg 2 is "lobby":
-				teleport player to spawn
-				give {inf.%player%.stored.invo::*} to player
-				delete {inf.%player%.stored.invo::*}
+				player's world is "{@LobbyWorld}":
+					teleport player to {inf.spawn}
+					give {inf.%player%.stored.invo::*} to player
+					delete {inf.%player%.stored.invo::*}
+					message "{@P} You have left the Infection Lobby"
+				else:
+					message "{@P} Urm... you can't leave a lobby you're not in"
 			else:
 				message "{@P} What have you got to leave?"
 		else if arg 1 is "me":
@@ -146,6 +155,15 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>]:
 						message "{@P} - Kit - /inf admin add kit <kitname> <default perm t/f> <supporter t/f>"
 						message "{@P} - Map - /inf admin add map <name>"
 						message "{@P} - Infected Kit - /inf admin set infkit"
+						message "{@P} - Main Spawn - /inf admin set mainspawn"
+					else if arg 3 is "mainspawn":
+						clear {inf.spawn}
+						set {inf.spawn} to location of player
+						message "{@P} Set spawn to: %{inf.spawn}%"
+					else if arg 3 is "infkit":
+						clear {inf.infected.kit}
+						loop all items in player's inventory:
+							add loop-item to {inf.infected.kit::*}
 					else if arg 3 is "lobby":
 						set {inf.lobby} to location of player
 						message "{@P} Set lobby to: %{inf.lobby}%"
@@ -506,6 +524,7 @@ every 15 seconds:
 							clear {inf.%{_line2}%.infected.players::*}
 							teleport loop-player to {inf.lobby}
 							send "{@P} There was an error starting the game. You have been disconnected from it" to loop-player
+							execute console command "tellraw %loop-player% {""text"":""If there are no staff online, please inform them through:             "",""color"":""green"",""extra"":[{""text"":""[Our Website]"",""color"":""red"",""underlined"":""true"",""bold"":""true"",""clickEvent"":{""action"":""open_url"",""value"":""http://quartzcraft.co.uk""},""hoverEvent"":{""action"":""show_text"",""value"":""Click to go to our Website: http://QuartzCraft.co.uk""}}]}"
 							if loop-player has permission "qcz.infecion.admin":
 								send "{@P} There was an error with map: %{_line2}% on starting of game. That map has now been closed." to loop-player
 							if loop-player has permission "qcz.infecion.moderator":
@@ -519,10 +538,13 @@ command /inf-startgame [<text>]:
 	executable by: console
 	trigger:
 		if arg 1 is not set:
-            clear {inf.%arg 1%.ready}
-        else:
-			enable PvP in arg 1
-			set {_line3} to line 3 of block at {inf.%loop-player%.signclicked}
+			clear {inf.%arg 1%.ready}
+		else:
+			set {_world} to arg 1 parsed as world
+			enable PvP in {_world}
+			loop all players:
+				if {inf.%loop-player%.playing.map} is arg 1:
+					set {_line3} to line 3 of block at {inf.%loop-player%.signclicked}
 			set {_players::*} to {_line3} split at "/"
 			set {_maxnum} to {_players::1}
 			set {_minnum} to 1
@@ -531,11 +553,12 @@ command /inf-startgame [<text>]:
 				if {inf.%loop-player%.playing.map} is arg 1:
 					add loop-player to {_inf.players::*}
 			set {inf.%arg 1%.infected} to {_inf.players::%{_rndnum}%}
-			set {inf.%arg 1%.ready}
-			send "{@P} You have been infected!" to loop-player
-			loop all playesr:
+			set {inf.%arg 1%.ready} to true
+			loop all players:
 				if {inf.%loop-player%.playing.map} is arg 1:
 					if {inf.%arg 1%.infected} is loop-player:
+						set {inf.%loop-player%.%arg 1%.infected} to true
+						send "{@P} You have been infected!" to loop-player
 						give {inf.infected.kit} to loop-player
 					else:
 						give {inf.%player%.kit} to loop-player
