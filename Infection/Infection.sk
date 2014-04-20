@@ -15,6 +15,7 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>]:
 	aliases: /infect, /inf,
 	trigger:
 		if arg 1 is not set:
+			execute console command "tellraw %player% {""text"":""If there are no staff online, please inform them through:             "",""color"":""green",""extra"":[{""text"":""[Our Website]"",""color"":""red"",""underlined"":""true"",""bold"":""true"",""clickEvent"":{""action"":""open_url"",""value"":""http://quartzcraft.co.uk""},""hoverEvent"":{""action"":""show_text"",""value"":""Click to go to our Website: http://QuartzCraft.co.uk""}}]}"
 			clear {inf.waiting::*}
 			message "{@P} You must give a sub-command! Do /inf help - for help."
 		else if arg 1 is "lobby":
@@ -463,51 +464,56 @@ every 15 seconds:
 		else if {inf.%loop-value%.ingame} is greater than or equal to 5:
 			loop all players:
 				{inf.%loop-player%.playing.map} is loop-value:
-					message "{@P} Game will now start in: 30 seconds"
+					send "{@P} Game will now start in: 30 seconds" to loop-player
 					wait 10 seconds
-					message "{@P} Game will now start in: 20 seconds"
+					send "{@P} Game will now start in: 20 seconds" to loop-player
 					wait 10 second
-					message "{@P} Game will now start in: 10 seconds"
+					send "{@P} Game will now start in: 10 seconds" to loop-player
 					wait 5 seconds
 					execute console command "/inf-startgame %loop-value%"
-					message "{@P} Game will now start in: 5 seconds"
+					send "{@P} Game will now start in: 5 seconds" to loop-player
 					wait 2 seconds
-					message "{@P} Game will now start in: 3 seconds"
+					send "{@P} Game will now start in: 3 seconds" to loop-player
 					wait 1 second
-					message "{@P} Game will now start in: 2 seconds"
+					send "{@P} Game will now start in: 2 seconds" to loop-player
 					wait 1 second
-					message "{@P} Game will now start in: 1 seconds"
+					send "{@P} Game will now start in: 1 seconds" to loop-player
 					if {inf.%loop-value%.ready} is not set:
-						message "{@P} There was a problem starting the game. You will be returned to the lobby in 5 seconds."
+						send "{@P} There was a problem starting the game. You will be returned to the lobby in 5 seconds." to loop-player
 						wait 5 seconds
-						loop all players:
-							if {inf.%loop-player%.playing.map} is loop-value:
-								set {_line2} to line 2 of block at {inf.%loop-player%.signclicked}
-								set {_line4} to line 4 of block at {inf.%loop-player%.signclicked}
-								subtract 1 from {inf.%{_line2}%.ingame}
-								set line 3 of block at {inf.%loop-player%.signclicked} to "%{inf.%{_line2}%.ingame}%/%{inf.%{_line2}%.slots}%"
-								if {inf.%{_line2}%.ingame} is 0:
-									set {inf.%{_line2}%.ingame.broadcast} to false
-								set {inf.%loop-player%.playing} to "False"
-								set {inf.%loop-player%.playing.map} to "None"
-								remove {_line2} from {inf.waiting::*}
-								set line 4 of block at {inf.%player%.signclicked} to "&4&lST-ERROR"
-								kill all zombies in {_line2}
-								kill all skeletons in {_line2}
-								kill all creepers in {_line2}
-								kill all spiders in {_line2}
-								kill all endermen in {_line2}
-								set {inf.%{_line2}%.infected} to 0
-								clear {inf.%{_line2}%.infected.players::*}
-								set line 4 of block at {inf.%player%.signclicked} to "&5&lWaiting"
-								teleport loop-player to {inf.lobby}
-								message "{@P} You left the game."
-								clear the player's inventory
-			message "{@P} Starting the game!"
+						if {inf.%loop-player%.playing.map} is loop-value:
+							set {_line2} to line 2 of block at {inf.%loop-player%.signclicked}
+							set {_line4} to line 4 of block at {inf.%loop-player%.signclicked}
+							subtract 1 from {inf.%{_line2}%.ingame}
+							set line 3 of block at {inf.%loop-player%.signclicked} to "%{inf.%{_line2}%.ingame}%/%{inf.%{_line2}%.slots}%"
+							if {inf.%{_line2}%.ingame} is 0:
+								set {inf.%{_line2}%.ingame.broadcast} to false
+							set {inf.%loop-player%.playing} to "False"
+							set {inf.%loop-player%.playing.map} to "None"
+							remove {_line2} from {inf.waiting::*}
+							set line 4 of block at {inf.%loop-player%.signclicked} to "&4&lST-ERROR"
+							kill all zombies in {_line2}
+							kill all skeletons in {_line2}
+							kill all creepers in {_line2}
+							kill all spiders in {_line2}
+							kill all endermen in {_line2}
+							set {inf.%{_line2}%.infected} to 0
+							clear {inf.%{_line2}%.infected.players::*}
+							teleport loop-player to {inf.lobby}
+							send "{@P} There was an error starting the game. You have been disconnected from it" to loop-player
+							if loop-player has permission "qcz.infecion.admin":
+								send "{@P} There was an error with map: %{_line2}% on starting of game. That map has now been closed." to loop-player
+							if loop-player has permission "qcz.infecion.moderator":
+								send "{@P} There was an error with map: %{_line2}% on starting of game. That map has now been closed." to loop-player
+							clear the loop-player's inventory
+					else:
+						send "{@P} Starting the game!" to loop-player
 			
 command /inf-startgame [<text>]:
 	description: Starting the game
-	execut
+	executable by: console
+	trigger:
+		message "hi"
 			
 on death of zombie:
 	world is {inf.map.%world%.name}:
