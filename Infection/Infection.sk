@@ -564,18 +564,12 @@ command /inf-startgame [<text>]:
 						give {inf.%player%.kit} to loop-player
 			
 on death of zombie:
-	world is {inf.map.%world%.name}:
+	{inf.%world%.ready} is true:
 		subtract 1 from {inf.map.%world%.zombiecount}
-		
-on command "/killall":
-	if arguments is "zombie":
-		set {inf.map.%world%.zombiecount} to 0
 		
 on entity target:
 	entity's target is a player:
-		send "hi" to target
-		{inf.%target%.infected} is true:
-			send "c" to target
+		if {inf.%target%.%world%.infected} is true:
 			cancel event
 
 on command:
