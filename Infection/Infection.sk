@@ -8,6 +8,10 @@ on join:
 	if {inf.%player%.started} is not set:
 		#set {inf.%player%.started} to true ====== RENABLE ON RELEASE!
 		set {inf.%player%.banned} to false
+		if {inf.%player%.kit} is not set:
+			set {inf.%player%.kit} to "Default"
+		else if {inf.%player%.kit} is "none":
+			set {inf.%player%.kit} to "Default"
 	
 command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>]:
 	description: Main Infection Command
@@ -140,7 +144,8 @@ command /infection [<text>] [<text>] [<text>] [<text>] [<text>] [<text>]:
 						message "{@P} - Map Spawn Point - /inf admin add spawn <map>"
 						message "{@P} - Start Point - /inf admin set spoint <map>" 
 						message "{@P} - Kit - /inf admin add kit <kitname> <default perm t/f> <supporter t/f>"
-						message "{@P} - Map - /inf admin add map"
+						message "{@P} - Map - /inf admin add map <name>"
+						message "{@P} - Infected Kit - /inf admin set infkit"
 					else if arg 3 is "lobby":
 						set {inf.lobby} to location of player
 						message "{@P} Set lobby to: %{inf.lobby}%"
@@ -470,7 +475,6 @@ every 15 seconds:
 					wait 10 second
 					send "{@P} Game will now start in: 10 seconds" to loop-player
 					wait 5 seconds
-					execute console command "/inf-startgame %loop-value%"
 					send "{@P} Game will now start in: 5 seconds" to loop-player
 					wait 2 seconds
 					send "{@P} Game will now start in: 3 seconds" to loop-player
@@ -478,6 +482,7 @@ every 15 seconds:
 					send "{@P} Game will now start in: 2 seconds" to loop-player
 					wait 1 second
 					send "{@P} Game will now start in: 1 seconds" to loop-player
+					execute console command "/inf-startgame %loop-value%"
 					if {inf.%loop-value%.ready} is not set:
 						send "{@P} There was a problem starting the game. You will be returned to the lobby in 5 seconds." to loop-player
 						wait 5 seconds
@@ -513,7 +518,27 @@ command /inf-startgame [<text>]:
 	description: Starting the game
 	executable by: console
 	trigger:
-		message "hi"
+		if arg 1 is not set:
+            clear {inf.%arg 1%.ready}
+        else:
+			enable PvP in arg 1
+			set {_line3} to line 3 of block at {inf.%loop-player%.signclicked}
+			set {_players::*} to {_line3} split at "/"
+			set {_maxnum} to {_players::1}
+			set {_minnum} to 1
+			set {_rndnum} to a random number between {_minnum} and {_maxnum}
+			loop all players:
+				if {inf.%loop-player%.playing.map} is arg 1:
+					add loop-player to {_inf.players::*}
+			set {inf.%arg 1%.infected} to {_inf.players::%{_rndnum}%}
+			set {inf.%arg 1%.ready}
+			send "{@P} You have been infected!" to loop-player
+			loop all playesr:
+				if {inf.%loop-player%.playing.map} is arg 1:
+					if {inf.%arg 1%.infected} is loop-player:
+						give {inf.infected.kit} to loop-player
+					else:
+						give {inf.%player%.kit} to loop-player
 			
 on death of zombie:
 	world is {inf.map.%world%.name}:
