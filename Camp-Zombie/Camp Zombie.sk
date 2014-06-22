@@ -1,0 +1,26 @@
+#Camp Zombie (CZ)
+#For QuartzCraft use only
+
+options:
+	P: &8[&aCZ&8]&a
+
+on script load:
+	set {cz.status.running} to "True"
+	
+on script disable:
+	set {cz.status.running} to "False"
+	
+command /camp-zombie [<text>] [<text>] [<text>] [<text>] [<text>]:
+	aliases: /cz, /campzombie, /czombie, /campz,
+	trigger:
+		if arg 1 is not set:
+			message "{@P} You must provide a sub-command, do /cz help - for help!"
+		else if arg 1 is "help":
+			#
+			#
+			#
+			# COMPLETE WHEN COMMANDS ARE DONE
+			#
+			#
+			#
+			#
