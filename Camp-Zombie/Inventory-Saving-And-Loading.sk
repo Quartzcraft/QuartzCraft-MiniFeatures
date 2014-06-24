@@ -1,0 +1,48 @@
+on script load:
+	delete {cz.otheritemslist::*}
+	set {cz.otheritemslist::298} to "Leather Helmet"
+	set {cz.otheritemslist::299} to "Leather Chestplate"
+	set {cz.otheritemslist::300} to "Leather Leggings"
+	set {cz.otheritemslist::301} to "Leather Boots"
+	set {cz.otheritemslist::302} to "Chainmail Helmet"
+	set {cz.otheritemslist::303} to "Chainmail Chestplate"
+	set {cz.otheritemslist::304} to "Chainmail Leggings"
+	set {cz.otheritemslist::305} to "Chainmail Boots"
+	set {cz.otheritemslist::306} to "Iron Helmet"
+	set {cz.otheritemslist::307} to "Iron Chesplate"
+	set {cz.otheritemslist::308} to "Iron Leggings"
+	set {cz.otheritemslist::309} to "Iron Boots"
+	set {cz.otheritemslist::310} to "Diamond Helmet"
+	set {cz.otheritemslist::311} to "Diamond Chestplate"
+	set {cz.otheritemslist::312} to "Diamond Legggings"
+	set {cz.otheritemslist::313} to "Diamond Boots"
+	set {cz.otheritemslist::314} to "Gold Helmet"
+	set {cz.otheritemslist::315} to "Gold Chestplate"
+	set {cz.otheritemslist::316} to "Gold Leggings"
+	set {cz.otheritemslist::317} to "Gold Boots"
+
+command /testsave [<text>]:
+	trigger:
+		if arg 1 is "save":
+			delete {cz.%player%.stats.invo::*}
+			set {cz.%player%.stat.helmet} to "%helmet of the player%"
+			set {cz.%player%.stat.chestplate} to "%chestplate of the player%"
+			set {cz.%player%.stat.leggings} to "%leggings of the player%"
+			set {cz.%player%.stat.boots} to "%boots of the player%"
+			while player has enough space for flowing water:
+				give 1 of flowing water to the player
+			loop items in player's inventory:
+				if {cz.otheritemslist::%id of loop-item%} is not set:
+					add loop-item to {cz.%player%.stats.invo::*}
+			remove all flowing water from player
+			message "&aSet inventory '&e%player%&a' kit to your inventory."
+		else if arg 1 is "load":
+			clear inventory of player
+			loop {cz.%player%.stats.invo::*}:
+				give loop-value to the player
+			remove all flowing water from player
+			equip player with {cz.%player%.stat.boots} parsed as item
+			equip player with {cz.%player%.stat.chestplate} parsed as item
+			equip player with {cz.%player%.stat.leggings} parsed as item
+			equip player with {cz.%player%.stat.helmet} parsed as item
+			message "&aLoaded inventory '&e%player%&a'."
