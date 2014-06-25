@@ -46,3 +46,43 @@ command /testsave [<text>]:
 			equip player with {cz.%player%.stat.leggings} parsed as item
 			equip player with {cz.%player%.stat.helmet} parsed as item
 			message "&aLoaded inventory '&e%player%&a'."
+			
+
+set {_kit} to {cz.%player%.stat.kit}
+if {cz.%player%.kit.%{_kit}%.allowed} is "False":
+	message "{@P} Your kit has been changed to: Tank - as you don't have permission to use %{_kit}%"
+	set {_kit} to "Tank"
+if {_kit} is "Tank":
+	equip player with iron boots named "&lTank boots"
+	equip player with iron leggings named "&lTank leggings"
+	equip player with iron chestplate named "&lTank chestplate"
+	equip player with iron helmet named "&lTank helmet"
+	give a diamond sword named "&l&aSlicer" to the player
+	#GIVE 3 POTIONS OF HEALING
+else if {_kit} is "Solider":
+	equip player with diamond boots named "&lSolider boots"
+	equip player with diamond leggings named "&lSolider leggings"
+	equip player with diamond chestplate named "&lSolider chestplate"
+	equip player with diamond helmet named "&lSolider helmet"
+	give a iron sword named "&l&aStriker" to the player
+	#GIVE 3 POTIONS OF HEALING
+else if {_kit} is "Medic":
+	equip player with leather boots named "&lMedic boots"
+	equip player with leather leggings named "&lMedic leggings"
+	equip player with leather chestplate named "&lMedic chestplate"
+	equip player with leather helmet named "&lMedic helmet"
+	give a stone sword named "&l&aTwacker" to the player
+	#GIVE 3 POTIONS OF HEALING
+	#GIVE 10 SPLASH POTIONS OF HEALING
+else if {_kit} is "Pyro":
+	equip player with chainmail boots named "&lPyro boots"
+	equip player with chainmail leggings named "&lPyro leggings"
+	equip player with chainmail chestplate named "&lPyro chestplate"
+	equip player with chainmail helmet named "&lPyro helmet"
+	give a stone sword named "&l&aTwacker" to the player
+	give 10 fire charges named "&4&lFire ball" to the player
+	#GIVE 3 POTIONS OF HEALING
+	#GIVE 5 POTIONS OF FIRE RESISTANCE
+else if {_kit} is "Priest":
+	
+	
