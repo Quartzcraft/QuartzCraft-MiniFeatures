@@ -1,0 +1,115 @@
+#PlayerInfo.sk
+#This script is made by QuartzCraft for use on QuartzCraft.
+
+options:
+	P: &5[&dPI&5]&d
+
+on join:
+  if {db_main.pi.list::%player%} is not set:
+    set {db_main.pi.list::%player%} to player
+	set {db_main.pi.%player%.online} to "Yes"
+	set {Now.%player%} to difference between {db_main.leave.%player%} and now
+	broadcast "&e%player% joined the game! Last seen: %{Now.%player%}%"
+	wait 2 seconds
+	message "&eWe've missed you for the: %{Now.%player%}% - You were gone!"
+on quit:
+
+	set {db_main.leave.%player%} to now
+	set {db_main.pi.%player%.online} to "No"
+
+command /p <offlineplayer> [admin]:
+	description: Main command
+	usage: /p <player>
+	trigger:
+		set {_player} to arg offlineplayer
+		if arg offlineplayer is not set:
+			message "{@P} You need to supply a player name!"
+		else:
+			if {_player} has permission "qcz.owner":
+				message "{@P} Records For: &5%{_player}%"
+				message "{@P} Group: &5Owner"
+			else if {_player} has permission "qcz.admin":
+				message "{@P} Records For: &4%{_player}%"
+				message "{@P} Group: &4Admin"
+			else if {_player} has permission "qcz.ss":
+				message "{@P} Records For: &a%{_player}%"
+				message "{@P} Group: &aSenior Staff"
+			else if {_player} has permission "qcz.mod":
+				message "{@P} Records For: &2%{_player}%"
+				message "{@P} Group: &2Moderator"
+			else if {_player} has permission "qcz.player":
+				message "{@P} Records For: &f%{_player}%"
+				message "{@P} Group: &fPlayer"
+			else if {_player} has permission "qcz.builder":
+				message "{@P} Records For: &e%{_player}%"
+				message "{@P} Group: &eBuilder"
+			else:
+				message "{@P} Records For: &6%{_player}%"
+				message "{@P} Unkown group!"
+		message "{@P} Online: &6%{db_main.pi.%{_player}%.online}%"
+		if {pi.%{_player}%.online} = "No":
+			set {Now.%{_player}%} to difference between {db_main.leave.%{_player}%} and now
+			message "{@P} Last Online: %{Now.%{_player}%}%"
+		if {db_main.pi.%{_player}%.banned} = "Banned":
+			message "{@P} Ban Status: &b%{db_main.pi.%{_player}%.banned}%"
+			message "{@P} Ban Reason: &b%{db_main.pi.%{_player}%.banreason}%"
+
+command /ban <offlineplayer> [<text>]:
+	description: Bans a player
+	usage: /ban <player> <reason>
+	permission: qcz.mod
+	permission message: &4You don't have permission!
+	executable by: players, console
+	trigger:
+		ban arg offlineplayer
+		kick arg offlineplayer due to "%arg 2%"
+		broadcast "&e%arg offlineplayer% &6was banned by &a%player%. &6Reason: &e%arg 2%"
+		set {db_main.pi.%arg offlineplayer%.banned} to "Banned"
+		set {db_main.pi.%arg offlineplayer%.banreason} to "%arg 2%"
+
+command /unban <offlineplayer>:
+	description: Unbans a player
+	usage: /unban <player>
+	permission: qcz.mod
+	permission message: &4You don't have permission!
+	executable by: players, console
+	trigger:
+		unban arg offlineplayer
+		message "&6Unbanned: &e%arg offlineplayer%"
+		set {db_main.pi.%arg offlineplayer%.banned} to "Not Banned"
+
+command /preload:
+	description: Reloads PlayerInfo
+	permission: qcz.admin
+	usage: /preload
+	trigger:
+		message "{@P} Reloading PlayerInfo..."
+		execute op command "/skript reload playerinfo"
+		message "{@P} Reloaded PlayerInfo!"
+		
+on sign change:
+  set {_l1} to line 1 parsed as text
+  set {_l2} to line 2 parsed as text
+  set {_l3} to line 3 parsed as text
+  set {_l4} to line 4 parsed as text
+  if {_l1} is "INFO" or "PINFO" or "[INFO]" or "&a[Info]":
+    if {_l2} is set:
+      if {db_main.pi.list::%{_l2}%} is set:
+        set {_p} to {_l2} parsed as player
+			if {_player} has permission "qcz.owner":
+				set line 3 of block to "&5&lOwner"
+			else if {_player} has permission "qcz.admin":
+				set line 3 of block to "&4&lAdmin"
+			else if {_player} has permission "qcz.ss":
+				set line 3 of block to "&a&lS. Staff"
+			else if {_player} has permission "qcz.mod":
+				set line 3 of block to "&2&lModerator"
+			else if {_player} has permission "qcz.player":
+				set line 3 of block to "&f&lPlayer"
+			else if {_player} has permission "qcz.builder":
+				set line 3 of block to "&e&lBuilder"
+      else if {_player} has permission "qcz.developer":
+				set line 3 of block to "&1&lDeveloper"
+			else:
+				set line 3 of block to "Unknown Group"
+          
