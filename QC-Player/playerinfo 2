@@ -5,17 +5,22 @@ options:
 	P: &5[&dPI&5]&d
 
 on join:
-  if {db_main.pi.list::%player%} is not set:
-    set {db_main.pi.list::%player%} to player
+	if {db_main.pi.list::%player%} is not set:
+		set {db_main.pi.list::%player%} to player
 	set {db_main.pi.%player%.online} to "Yes"
 	set {Now.%player%} to difference between {db_main.leave.%player%} and now
 	broadcast "&e%player% joined the game! Last seen: %{Now.%player%}%"
 	wait 2 seconds
 	message "&eWe've missed you for the: %{Now.%player%}% - You were gone!"
 on quit:
-
 	set {db_main.leave.%player%} to now
 	set {db_main.pi.%player%.online} to "No"
+
+command /dbtest:
+	trigger:
+		set {db_main.%player%} to true
+		wait 2 seconds
+		message "%{db_main.%player%}%"
 
 command /p <offlineplayer> [admin]:
 	description: Main command
@@ -95,21 +100,28 @@ on sign change:
 	if {_l1} is "INFO" or "PINFO" or "[INFO]" or "&a[Info]":
 		if {_l2} is set:
 			if {db_main.pi.list::%{_l2}%} is set:
-				set {_p} to {_l2} parsed as player
+				set line 1 of block to "&a[PINFO]"
+				set {_player} to {_l2} parsed as player
 				if {_player} has permission "qcz.owner":
 					set line 3 of block to "&5&lOwner"
+					set line 2 of block to "&l%{_l2}%"
 				else if {_player} has permission "qcz.admin":
 					set line 3 of block to "&4&lAdmin"
+					set line 2 of block to "&l%{_l2}%"
 				else if {_player} has permission "qcz.ss":
 					set line 3 of block to "&a&lS. Staff"
 				else if {_player} has permission "qcz.mod":
 					set line 3 of block to "&2&lModerator"
+					set line 2 of block to "&l%{_l2}%"
 				else if {_player} has permission "qcz.player":
 					set line 3 of block to "&f&lPlayer"
+					set line 2 of block to "&l%{_l2}%"
 				else if {_player} has permission "qcz.builder":
 					set line 3 of block to "&e&lBuilder"
-      				else if {_player} has permission "qcz.developer":
+					set line 2 of block to "&l%{_l2}%"
+				else if {_player} has permission "qcz.developer":
 					set line 3 of block to "&1&lDeveloper"
+					set line 2 of block to "&l%{_l2}%"
 				else:
 					set line 3 of block to "Unknown Group"
-          
+					set line 2 of block to "&l%{_l2}%"
