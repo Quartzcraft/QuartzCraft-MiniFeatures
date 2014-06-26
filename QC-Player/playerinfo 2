@@ -88,28 +88,28 @@ command /preload:
 		message "{@P} Reloaded PlayerInfo!"
 		
 on sign change:
-  set {_l1} to line 1 parsed as text
-  set {_l2} to line 2 parsed as text
-  set {_l3} to line 3 parsed as text
-  set {_l4} to line 4 parsed as text
-  if {_l1} is "INFO" or "PINFO" or "[INFO]" or "&a[Info]":
-    if {_l2} is set:
-      if {db_main.pi.list::%{_l2}%} is set:
-        set {_p} to {_l2} parsed as player
-			if {_player} has permission "qcz.owner":
-				set line 3 of block to "&5&lOwner"
-			else if {_player} has permission "qcz.admin":
-				set line 3 of block to "&4&lAdmin"
-			else if {_player} has permission "qcz.ss":
-				set line 3 of block to "&a&lS. Staff"
-			else if {_player} has permission "qcz.mod":
-				set line 3 of block to "&2&lModerator"
-			else if {_player} has permission "qcz.player":
-				set line 3 of block to "&f&lPlayer"
-			else if {_player} has permission "qcz.builder":
-				set line 3 of block to "&e&lBuilder"
-      else if {_player} has permission "qcz.developer":
-				set line 3 of block to "&1&lDeveloper"
-			else:
-				set line 3 of block to "Unknown Group"
+	set {_l1} to line 1 parsed as text
+	set {_l2} to line 2 parsed as text
+	set {_l3} to line 3 parsed as text
+	set {_l4} to line 4 parsed as text
+	if {_l1} is "INFO" or "PINFO" or "[INFO]" or "&a[Info]":
+		if {_l2} is set:
+			if {db_main.pi.list::%{_l2}%} is set:
+				set {_p} to {_l2} parsed as player
+				if {_player} has permission "qcz.owner":
+					set line 3 of block to "&5&lOwner"
+				else if {_player} has permission "qcz.admin":
+					set line 3 of block to "&4&lAdmin"
+				else if {_player} has permission "qcz.ss":
+					set line 3 of block to "&a&lS. Staff"
+				else if {_player} has permission "qcz.mod":
+					set line 3 of block to "&2&lModerator"
+				else if {_player} has permission "qcz.player":
+					set line 3 of block to "&f&lPlayer"
+				else if {_player} has permission "qcz.builder":
+					set line 3 of block to "&e&lBuilder"
+      				else if {_player} has permission "qcz.developer":
+					set line 3 of block to "&1&lDeveloper"
+				else:
+					set line 3 of block to "Unknown Group"
           
